@@ -1,0 +1,16 @@
+Third-party model provenance for this folder
+══════════════════════════════════════════════════════════
+
+Source: Fantasy Props MegaKit (Standard/free tier), by Quaternius
+https://quaternius.com
+License: CC0 1.0 Universal (public domain dedication)
+http://creativecommons.org/publicdomain/zero/1.0/
+Free for personal, educational and commercial use. Attribution
+not required (credited here anyway). Full license text copied
+from the original pack: see ../../"Fantasy Props MegaKit[Standard]"/License_Standard.txt
+
+25 props selected from the pack's 47 and optimized in place with
+@gltf-transform/cli (texture resize to 256px + WebP recompression,
+mesh dedup/weld/simplify) to fit this game's single-file size
+budget — geometry/material identity unchanged, only
+resolution/encoding reduced.

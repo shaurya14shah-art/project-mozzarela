@@ -1,0 +1,5 @@
+wanderer.glb, wanderer-anims.glb
+  Source: Mesh2Motion (https://github.com/Mesh2Motion/mesh2motion-app), art assets CC0 1.0
+  Universal (public domain). Copied from the owner's RŌNIN project
+  (~/AG/Games/client/public/models/swordsman*.glb, built there by
+  tools/build-character-assets.mjs). No attribution required; recorded for provenance.

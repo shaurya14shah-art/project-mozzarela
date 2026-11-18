@@ -1,0 +1,25 @@
+{
+  "name": "game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "node start-electron.js",
+    "bundle": "vite build && node tools/bundle-single-file.mjs",
+    "serve:single": "python3 -m http.server 5203 --directory dist-single"
+  },
+  "devDependencies": {
+    "electron": "^42.2.0",
+    "vite": "^8.0.1"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "howler": "^2.2.4",
+    "simplex-noise": "^4.0.3",
+    "three": "^0.183.2"
+  }
+}

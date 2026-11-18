@@ -1,0 +1,26 @@
+# Netlify / drag-and-drop static hosting.
+#
+# The game is a pure static bundle — no server, no API, no database —
+# so any static host works. Netlify is here because it has a
+# zero-config drag-and-drop path that needs no CLI.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Single-page app: every route serves the game.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# The JS bundle is content-hashed by Vite, so it can be cached hard.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

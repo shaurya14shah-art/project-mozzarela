@@ -1,0 +1,16 @@
+Third-party model provenance for this folder
+══════════════════════════════════════════════════════════
+
+All 7 files here were provided directly by the project owner
+(downloaded/licensed by them, added to the repo personally) and
+optimized in place with @gltf-transform/cli (texture resize to
+160px + WebP recompression, mesh dedup/weld/simplify) — geometry
+and material identity unchanged, only resolution/encoding reduced
+to fit this game's single-file size budget. Original unoptimized
+files remain at the game/ root as provided.
+
+alchemical_potion.glb, grimoire_-_morphose.glb,
+potion_and_ingredients_bottles_witcher.glb,
+potion_health_elixir_game_ready_asset.glb,
+potion_mana_elixir_game_ready_asset.glb,
+potion_poison_elixir_game_ready_asset.glb, potion_starter_kit.glb

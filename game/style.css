@@ -1,0 +1,3781 @@
+/* ══════════════════════════════════════════════════════════
+   PROJECT MOZZARELA — "A GRIMOIRE BOUND IN IRON"
+   ══════════════════════════════════════════════════════════
+   Alchemical manuscript structure, Diablo-weight chrome.
+
+   House rules, enforced throughout:
+     · No border-radius. Corners are cut or square, never soft.
+     · No backdrop-filter. Panels are solid objects, not frosted glass.
+     · No gradient fills on controls. Ink is flat; depth comes from
+       rules, insets and hard shadow.
+     · Ornament is stroked geometry (see ui/Sigil.js), never texture.
+     · Type carries the tone: inscriptional caps for chrome,
+       old-style book serif for anything you actually read.
+
+   Two paths, one stylesheet. Everything below is written against
+   custom properties; [data-path] on <html> swaps the world.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 1. TYPE ────────────────────────────────────────────── */
+
+:root {
+  --font-display: 'Cinzel', 'Trajan Pro', Optima, Georgia, serif;
+  --font-body: 'EB Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+}
+
+/* ── 2. THE TWO PATHS ───────────────────────────────────── */
+
+/* HELL — charred black, blood, iron, ash. */
+:root,
+[data-path='hell'] {
+  --ground:        #0a0806;
+  --ground-deep:   #050403;
+  --well:          #050403;   /* recessed: slots, tracks, inputs */
+  --edge:          #000000;   /* the hard inset line — reads as iron */
+  /* Full-bleed screens (loading, creation, story) are the book's
+     cover in BOTH paths: dark leather, light foil lettering. Panels
+     are the pages that sit on it. */
+  --backdrop:      #050403;
+  /* Same colour as --backdrop, as an r,g,b triplet — lets the loading/
+     character-creation screens use rgba(var(--backdrop-rgb), α) to sit
+     as a translucent scrim over the live rendered world instead of a
+     solid wall hiding it. Keep in sync with --backdrop by hand if that
+     ever changes; there is no CSS colour-to-triplet function to derive
+     this automatically. */
+  --backdrop-rgb:  5, 4, 3;
+  --backdrop-ink:  #e8dcbc;
+  --backdrop-dim:  #8b7b5e;
+  --panel:         #100c08;
+  --panel-raised:  #171109;
+  --page:          #16110a;   /* scorched vellum — reading surfaces */
+  --page-edge:     #241a0e;
+
+  --ink:           #d9c9a4;   /* bone */
+  --ink-strong:    #f3e7c8;
+  --ink-dim:       #8b7b5e;
+  --ink-faint:     #5a4e3a;
+
+  --rule:          #3a2c19;
+  --rule-strong:   #5c4526;
+  --chrome:        #6b5228;   /* tarnished gold — frames */
+  --chrome-bright: #c9a24e;   /* gold leaf — emphasis */
+  /* Emphasis for anything mounted directly on --backdrop (the title
+     plate, the creation masthead/ledger) rather than on a --panel.
+     In Hell that's the same gold leaf; in Heaven it CANNOT be, because
+     Heaven's --chrome-bright is a dark brown tuned for cream pages and
+     goes nearly invisible on Heaven's dark leather binding. One token
+     so those screens don't need per-path duplicates. */
+  --foil:          #c9a24e;
+
+  --accent:        #8f1616;   /* blood */
+  --accent-bright: #d93b2b;
+  --accent-ink:    #f0e0d0;
+
+  --hp:            #8f1616;
+  --mp:            #2a6a86;
+  --stamina:       #6a7a2a;
+
+  --shadow-hard:   0 2px 0 rgba(0, 0, 0, 0.85);
+  --scrim:         rgba(6, 4, 3, 0.86);
+  --sigil-frame-op: 0.5;
+
+  /* Element hues, tuned for a dark ground. */
+  --el-fire:      #ff6a35;
+  --el-water:     #4aa8ff;
+  --el-earth:     #a8c455;
+  --el-wind:      #9fe8dc;
+  --el-lightning: #ffd94a;
+  --el-shadow:    #a855e0;
+  --el-light:     #ffe9a3;
+  --el-void:      #d976ff;
+  --el-neutral:   #a0968a;
+  --el-ice:       #7fd0ff;
+  --el-poison:    #9ee04a;
+  --el-arcane:    #c9a0ff;
+}
+
+/* HEAVEN — bleached vellum, gold leaf, ink-brown. */
+[data-path='heaven'] {
+  /* A cream page needs a dark binding behind it, or the vellum just
+     looks grey. The ground is leather; the panels are the pages. */
+  --ground:        #6f6249;
+  --ground-deep:   #443c2e;
+  --well:          #ddd0b0;   /* recessed parchment, not a dark hole */
+  --edge:          #9c8a67;
+  --backdrop:      #3b342a;   /* tooled leather binding */
+  --backdrop-rgb:  59, 52, 42;
+  --backdrop-ink:  #f0e7d0;
+  --backdrop-dim:  #b3a488;
+  --panel:         #ede2c9;
+  --panel-raised:  #f7f0dd;
+  --page:          #f8f2e2;
+  --page-edge:     #d6c7a4;
+
+  --ink:           #2e2418;
+  --ink-strong:    #140f08;
+  --ink-dim:       #6a5c47;
+  --ink-faint:     #97886e;
+
+  --rule:          #b6a382;
+  --rule-strong:   #8d7a5a;
+  --chrome:        #9a7f45;
+  --chrome-bright: #7a5e22;
+  /* Gold leaf on the binding — see --foil's note in the Hell block. */
+  --foil:          #e3cd94;
+
+  --accent:        #8c1616;
+  --accent-bright: #a82020;
+  --accent-ink:    #fdf6e6;
+
+  --hp:            #8c1616;
+  --mp:            #1c5b7a;
+  --stamina:       #4e6413;
+
+  --shadow-hard:   0 1px 0 rgba(120, 100, 68, 0.4);
+  /* Heaven's HUD is ink on a bone scrim, never solid vellum — light
+     panels glare over the fogged, bloomed 3D world. */
+  --scrim:         rgba(242, 234, 214, 0.84);
+  --sigil-frame-op: 0.55;
+
+  /* Same hue identity as Hell, retuned for luminance on a light
+     ground. These encode data (balance bars, the Grimoire matrix),
+     so legibility here is a requirement, not a nicety. */
+  --el-fire:      #b0300a;
+  --el-water:     #10559c;
+  --el-earth:     #4c6a16;
+  --el-wind:      #1f7a6c;
+  --el-lightning: #8a6404;
+  --el-shadow:    #5e1d84;
+  --el-light:     #876310;
+  --el-void:      #7d189e;
+  --el-neutral:   #5c5346;
+  --el-ice:       #14688f;
+  --el-poison:    #3d7410;
+  --el-arcane:    #63339c;
+}
+
+/* ── 3. RESET & BASE ────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--backdrop);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#game-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+.hidden { display: none !important; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+button { font-family: var(--font-display); cursor: pointer; }
+input  { font-family: var(--font-body); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--panel); }
+::-webkit-scrollbar-thumb { background: var(--rule); border: 2px solid var(--panel); }
+::-webkit-scrollbar-thumb:hover { background: var(--rule-strong); }
+/* Firefox has no ::-webkit-scrollbar hook — without this every scroll
+   panel (satchel, cauldron shelf, grimoire) reverts to the OS's plain
+   grey bar mid-way through an otherwise deliberately chromed UI. */
+html { scrollbar-width: thin; scrollbar-color: var(--rule) var(--panel); }
+
+/* Keyboard focus — a chrome ring, not the browser's default blue.
+   One rule covers every native control at once (every clickable thing
+   in this UI is a real <button>/<input>, or now carries a matching
+   [tabindex] — see .shelf-row/.pot-slot/.forge-recipe-row/
+   .wand-menu-slot/.inv-slot below). .shelf-search/.cc-input keep their
+   own border-based focus look instead of doubling the cue. */
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--chrome-bright);
+  outline-offset: 2px;
+}
+.shelf-search:focus-visible, .cc-input:focus-visible { outline: none; }
+
+/* ── 4. CHROME PRIMITIVES ───────────────────────────────── */
+
+/* The frame: a hard double rule. This is the single most repeated
+   shape in the UI — every panel, card and slot varies on it. */
+/* .wand-slot is deliberately NOT in this list — the action bar's
+   sockets are round (see section 10) and would fight this square
+   frame for the same four properties. */
+.menu-panel,
+.cc-card,
+.inv-slot,
+.pot-slot,
+.fusion-card,
+.reaction-card,
+.stat-box {
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--edge), inset 0 0 0 2px var(--rule);
+}
+
+.filigree {
+  position: absolute;
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  color: var(--chrome);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.rule-ornament { display: block; width: 100%; height: 10px; color: var(--rule-strong); margin: 10px 0; }
+
+/* Controls: flat ink, hard edge. No gradient, no glow. */
+.cc-start-btn,
+.brew-button,
+.forge-craft-button,
+.wpr-infuse,
+.hud-btn,
+.ghost-button {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  background: var(--panel-raised);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.cc-start-btn:hover:not(:disabled),
+.brew-button:hover:not(:disabled),
+.forge-craft-button:hover:not(:disabled),
+.wpr-infuse:hover,
+.hud-btn:hover,
+.ghost-button:hover {
+  border-color: var(--chrome-bright);
+  color: var(--ink-strong);
+  background: var(--page-edge);
+}
+.cc-start-btn:active:not(:disabled),
+.forge-craft-button:active:not(:disabled),
+.wpr-infuse:active,
+.hud-btn:active,
+.ghost-button:active {
+  background: var(--rule);
+  border-color: var(--rule-strong);
+}
+.cc-start-btn:disabled,
+.brew-button:disabled,
+.forge-craft-button:disabled,
+.forge-craft-button.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--rule);
+}
+
+/* The two loud controls — cast in blood. */
+.brew-button, .cc-start-btn {
+  background: var(--accent);
+  border-color: var(--accent-bright);
+  color: var(--accent-ink);
+}
+.brew-button:hover:not(:disabled), .cc-start-btn:hover:not(:disabled) {
+  background: var(--accent-bright);
+  color: #fff;
+}
+.brew-button:active:not(:disabled), .cc-start-btn:active:not(:disabled) {
+  background: #6e0f0f;
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.close-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink-dim);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+}
+.close-btn:hover { color: var(--accent-bright); border-color: var(--accent); }
+.close-btn:active { background: var(--accent); color: #fff; }
+
+.shelf-search, .cc-input {
+  background: var(--well);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+  padding: 8px 11px;
+  outline: none;
+}
+.shelf-search:focus, .cc-input:focus { border-color: var(--chrome-bright); }
+.shelf-search::placeholder, .cc-input::placeholder { color: var(--ink-faint); font-style: italic; }
+
+/* .tr-actions button (the transmute row's ×1/All controls) joins this
+   family instead of reimplementing the same small-caps outline button
+   a second time — it used to duplicate this whole block at slightly
+   different, unexplained numbers (0.6rem vs 0.66rem, 6px vs 5px). */
+.filter-chip, .qty-chip, .tr-actions button {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+}
+.filter-chip:hover, .qty-chip:hover:not(:disabled), .tr-actions button:hover { color: var(--ink); border-color: var(--rule-strong); }
+.filter-chip:active:not(:disabled), .qty-chip:active:not(:disabled), .tr-actions button:active { background: var(--rule); color: var(--ink-strong); }
+.filter-chip.on, .qty-chip.on { background: var(--chrome); border-color: var(--chrome-bright); color: var(--accent-ink); }
+.filter-chip:disabled, .qty-chip:disabled { opacity: 0.3; cursor: not-allowed; }
+
+kbd {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.7em;
+  padding: 1px 5px;
+  border: 1px solid var(--rule-strong);
+  background: var(--well);
+  color: var(--ink);
+  letter-spacing: 0.06em;
+}
+
+/* Section label — small caps over a hairline. */
+.readout-head, .wand-col-head, .forge-cat-label, .shelf-title,
+.cc-label, .stat-label, .forge-qty-label, .equip-label {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* ── 5. SIGILS ──────────────────────────────────────────── */
+
+/* Sigil wrappers are often <span>. An inline box ignores width/height,
+   which lets the SVG expand to fill whatever it's in — so every
+   wrapper is blockified here rather than one-by-one. */
+.shelf-icon, .pot-slot-icon, .rr-icon, .rf-icon, .mch-icon, .mc-icon,
+.mc-lock, .fusion-icon, .wpr-icon, .tr-icon, .forge-row-icon,
+.forge-ing-icon, .wms-icon, .cc-card-icon, .path-sigil, .pot-icon,
+.wand-equipped-icon, .inv-item-icon, .wand-slot-icon, .wand-slot-form,
+.hotbar-icon,
+.readout-empty-icon, .shelf-forms .sigil, .bar-label .sigil,
+.matrix-row-head .sigil, .ff-chip .sigil, .tr-yield .sigil,
+.forge-detail-title .sigil {
+  display: block;
+  flex-shrink: 0;
+}
+
+.sigil { display: block; width: 100%; height: 100%; overflow: visible; }
+.sigil-frame { opacity: var(--sigil-frame-op); }
+.sigil-bare { stroke-width: 5; }
+.bar-label .sigil, .wms-meta .sigil { display: inline-block; }
+
+/* ── 6. LOADING ─────────────────────────────────────────── */
+
+/* The world is already rendering behind all three of these screens
+   (startMenuBackdrop() in main.js). They are therefore written as
+   things sitting ON a place, not as covers hiding one: a translucent
+   flat tint for the ground, and a framed plate carrying the type.
+   A flat tint, not a blur — "no backdrop-filter" still holds. */
+
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  background: rgba(var(--backdrop-rgb), 0.72);
+  color: var(--backdrop-ink);
+}
+
+/* The framed plate shared by the loading title card. Solid ink, hard
+   shadow, cut corners via a second inset border — no radius, no
+   gradient, per this file's house rules. */
+.title-plate {
+  position: relative;
+  padding: 46px 54px 40px;
+  background: rgba(var(--backdrop-rgb), 0.82);
+  border: 1px solid var(--chrome);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7), 0 18px 40px rgba(0, 0, 0, 0.55);
+  color: var(--foil);
+}
+.title-plate::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--rule-strong);
+  pointer-events: none;
+}
+.title-plate > .filigree {
+  position: absolute;
+  inset: 12px;
+  width: auto;
+  height: auto;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.loading-content { text-align: center; max-width: 620px; }
+.title-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: var(--backdrop-dim);
+  margin: 0 0 14px;
+}
+.loading-title {
+  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--backdrop-ink);
+  margin: 0 0 6px;
+  /* The only text shadow in the file. The title sits over a live,
+     moving 3D scene whose luminance is not ours to predict, and it
+     has to stay readable when the orbit swings a bright horizon
+     behind it. */
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+.title-epigraph {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--backdrop-dim);
+  max-width: 32em;
+  margin: 6px auto 30px;
+}
+
+/* The fracture ornament (Sigil.js fractureRule) — the wound stroke
+   sits in the chrome, the core stroke lifts to gold leaf so the split
+   reads as lit from inside. */
+.fracture-rule { display: block; width: 100%; height: 12px; color: var(--chrome); margin: 14px 0; overflow: visible; }
+.fracture-rule .fracture-rule-core { stroke: var(--foil); }
+
+.loading-meter { display: flex; align-items: center; gap: 12px; }
+.loading-bar-container {
+  flex: 1;
+  height: 5px;
+  background: var(--well);
+  border: 1px solid var(--rule-strong);
+  padding: 1px;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.8);
+}
+.loading-bar { height: 100%; width: 0; background: var(--accent); transition: width 0.25s; }
+.loading-pct {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  color: var(--foil);
+  min-width: 3.4em;
+  text-align: right;
+}
+.loading-status {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--backdrop-dim);
+  margin: 12px 0 0;
+}
+
+/* ── 7. CHARACTER CREATION ──────────────────────────────── */
+
+#character-creation {
+  position: fixed;
+  inset: 0;
+  z-index: 480;
+  overflow-y: auto;
+  /* Slightly more opaque than the loading screen: far more text and
+     denser grids that must stay legible over a moving scene. */
+  background: rgba(var(--backdrop-rgb), 0.86);
+  color: var(--backdrop-ink);
+  /* Room for the fixed masthead and the sticky ledger at the foot. */
+  padding: 54px 0 108px;
+}
+
+/* Masthead — the running head of a bound chapter. Fixed, so the
+   identity of the screen never scrolls away from a long class grid. */
+.cc-masthead {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 24px;
+  background: rgba(var(--backdrop-rgb), 0.96);
+  border-bottom: 1px solid var(--chrome);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.cc-masthead-mark { color: var(--foil); }
+.cc-masthead-step { color: var(--backdrop-dim); letter-spacing: 0.2em; }
+
+/* Labels and hints sit on the cover, so they take the foil colour. */
+#character-creation .cc-label { color: var(--backdrop-ink); border-bottom-color: transparent; }
+#character-creation .cc-hint,
+#character-creation .cc-selected-count { color: var(--backdrop-dim); }
+
+.cc-container { max-width: 900px; margin: 0 auto; padding: 34px 28px 40px; }
+.cc-title {
+  font-size: clamp(1.5rem, 4vw, 2.3rem);
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-align: center;
+  color: var(--backdrop-ink);
+  margin-bottom: 10px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+}
+.cc-preamble {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  text-align: center;
+  color: var(--backdrop-dim);
+  max-width: 36em;
+  margin: 4px auto 34px;
+}
+
+/* Each decision is its own plate on the cover, rather than four
+   headings floating in one column of empty space. */
+.cc-section {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 18px 20px 20px;
+  background: rgba(var(--backdrop-rgb), 0.7);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+  transition: border-color 0.18s, background 0.18s;
+}
+/* Answered sections recede; the unanswered one is where the eye goes.
+   Driven from main.js's checkStartReady(), which already ran on every
+   input — it just had nowhere to say anything before this. */
+.cc-section[data-done='true'] { border-left-color: var(--rule-strong); background: rgba(var(--backdrop-rgb), 0.55); }
+
+.cc-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+.cc-numeral {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--foil);
+  min-width: 1.6em;
+}
+.cc-section-head .cc-label { flex: 1; margin: 0; }
+.cc-section-state {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cc-section[data-done='true'] .cc-section-state { color: var(--foil); }
+
+.cc-input { width: 100%; }
+.cc-hint, .cc-selected-count { font-style: italic; font-size: 0.84rem; color: var(--ink-dim); margin: 6px 0; }
+.cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(142px, 1fr)); gap: 8px; }
+.cc-card { position: relative; padding: 14px 10px; text-align: center; cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+.cc-card:hover { border-color: var(--rule-strong); background: var(--panel-raised); }
+.cc-card.selected { border-color: var(--chrome-bright); background: var(--page-edge); }
+.cc-card.selected::after { content: ''; position: absolute; inset: 4px; border: 1px solid var(--chrome); pointer-events: none; }
+.cc-card-icon { width: 38px; height: 38px; margin: 0 auto 8px; color: var(--ink-dim); }
+.cc-card.selected .cc-card-icon { color: var(--chrome-bright); }
+.cc-card-name { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.cc-card-desc { font-size: 0.76rem; font-style: italic; color: var(--ink-dim); margin-top: 3px; }
+
+/* The ledger — a sticky foot carrying the gate and, crucially, the
+   REASON the gate is shut. A disabled button with no explanation was
+   the single most confusing thing on this screen. */
+.cc-ledger {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 2;
+  background: rgba(var(--backdrop-rgb), 0.97);
+  border-top: 1px solid var(--chrome);
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.8), 0 -14px 30px rgba(0, 0, 0, 0.45);
+}
+.cc-ledger-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px 28px 14px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.cc-checklist {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* A drawn mark, not an emoji or an icon font — ornament here is
+   geometry, same rule as everywhere else in this file. */
+.cc-checklist li::before {
+  content: '·';
+  display: inline-block;
+  width: 1.3em;
+  color: var(--ink-faint);
+}
+.cc-checklist li[data-done='true'] { color: var(--foil); }
+.cc-checklist li[data-done='true']::before { content: '✕'; color: var(--foil); }
+.cc-ledger .cc-start-btn { display: block; width: auto; min-width: 260px; margin: 0; padding: 14px 26px; font-size: 0.82rem; }
+/* A shut gate should look like iron, not like blood at 35% — the
+   generic .cc-start-btn:disabled rule only dims the accent, which on
+   the ledger's near-opaque plate still reads as an inviting red
+   button. Here it goes cold instead, and the accent is held back as
+   the reward for finishing the four decisions. */
+.cc-ledger .cc-start-btn:disabled {
+  opacity: 1;
+  background: var(--well);
+  border-color: var(--rule);
+  color: var(--ink-faint);
+}
+.cc-start-btn { display: block; width: 100%; padding: 15px; font-size: 0.9rem; margin-top: 12px; }
+
+/* The path choice — the one decision that changes the world. */
+.path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.path-card {
+  position: relative;
+  padding: 26px 20px 22px;
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.path-card:hover { border-color: var(--rule-strong); transform: translateY(-2px); }
+.path-card.selected { border-color: var(--chrome-bright); }
+.path-card.selected::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid currentColor;
+  opacity: 0.45;
+  pointer-events: none;
+}
+/* Each card previews its own world, whatever theme is active. */
+.path-card[data-path-choice='heaven'] { background: #ece0c6; color: #2e2418; }
+.path-card[data-path-choice='hell']   { background: #100c08; color: #d9c9a4; }
+.path-sigil { width: 54px; height: 54px; margin: 0 auto 10px; }
+.path-name { font-family: var(--font-display); font-size: 1.02rem; letter-spacing: 0.2em; text-transform: uppercase; }
+/* The Doctrine's one-line reading of the Fracture, per path — the
+   line that actually tells you what you are agreeing with. */
+.path-creed {
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.62;
+  margin-top: 5px;
+}
+.path-blurb { font-size: 0.82rem; font-style: italic; opacity: 0.78; margin-top: 9px; line-height: 1.5; }
+.path-grant {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: 1px solid currentColor;
+  opacity: 0.5;
+}
+
+/* ── 8. STORY ───────────────────────────────────────────── */
+
+/* The lightest scrim of the three — by this point the player has
+   committed and the world behind is the thing being introduced. */
+#story-intro { position: fixed; inset: 0; z-index: 470; display: grid; place-items: center; background: rgba(var(--backdrop-rgb), 0.78); }
+.story-content { max-width: 640px; padding: 0 30px; text-align: center; font-size: 1.12rem; line-height: 1.85; color: var(--backdrop-ink); }
+
+/* Staged reveal. Four lines dumped at once are a paragraph nobody
+   reads; four lines arriving in sequence are a cold open. Pure CSS
+   with per-line delays rather than a JS timer chain — nothing to
+   cancel, nothing to leak if the player skips. */
+.story-line {
+  margin: 0 0 20px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: story-line-in 1.1s ease-out forwards;
+}
+.story-line:nth-child(1) { animation-delay: 0.25s; }
+.story-line:nth-child(2) { animation-delay: 1.55s; }
+.story-line:nth-child(3) { animation-delay: 2.85s; }
+.story-line:nth-child(4) { animation-delay: 4.15s; }
+#story-intro .fracture-rule { opacity: 0; animation: story-line-in 1.1s ease-out 5.3s forwards; }
+.story-begin { opacity: 0; animation: story-line-in 1.1s ease-out 5.6s forwards; }
+@keyframes story-line-in { to { opacity: 1; transform: none; } }
+
+/* Respect a reduced-motion preference: show every line immediately
+   rather than making someone wait out an animation they asked not to
+   see. */
+@media (prefers-reduced-motion: reduce) {
+  .story-line, #story-intro .fracture-rule, .story-begin { animation: none; opacity: 1; transform: none; }
+  .path-card:hover { transform: none; }
+}
+
+#story-text-2, #story-text-3 { font-style: italic; color: var(--backdrop-dim); }
+#skip-story-btn { margin-top: 22px; }
+
+/* ── 9. HUD ─────────────────────────────────────────────── */
+
+#hud { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
+#hud > * { pointer-events: auto; }
+
+#hud-top-left {
+  position: absolute;
+  top: 16px; left: 16px;
+  width: 250px;
+  padding: 10px 12px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+/* Diegetic fade — full vitals aren't worth staring at when nothing's
+   changing. Dims to a quiet sliver rather than vanishing outright, so
+   it's still there to glance at, just not fighting for attention. */
+#hud-top-left.dim { opacity: 0.28; }
+#hud-top-left.dim:hover { opacity: 1; }
+.stat-bar { position: relative; height: 17px; margin-bottom: 5px; background: var(--well); border: 1px solid var(--rule-strong); }
+.stat-bar-fill { height: 100%; width: 100%; transition: width 0.2s; }
+.hp-fill { background: var(--hp); }
+.mp-fill { background: var(--mp); }
+.stamina-fill { background: var(--stamina); }
+.stamina-bar { height: 6px; }
+/* Thinner than stamina — see the markup comment. Chrome rather than an
+   element colour: it belongs to no element, and this project reserves
+   the element hues for things that genuinely have one.
+   ⚠️ --chrome-bright, NOT --foil. The foil note applies to things
+   mounted on --backdrop; the HUD sits on --scrim, which is dark
+   leather in Hell and bone in Heaven, and --foil is a pale gold that
+   disappears entirely on the light one. --chrome-bright is the
+   variable that flips with the ground, which is why the level line
+   directly below already uses it. */
+.xp-bar { height: 4px; margin-top: 2px; }
+.xp-fill { background: var(--chrome-bright); transition: width 0.35s ease; }
+.stat-bar-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  /* Always bone: these sit on saturated fill bars in both paths. */
+  color: #f2e8d0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+#player-level {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* The level number reads quieter than the attunement name beside it.
+   They are two different facts sharing a line and the emergent one is
+   the one worth looking at. */
+#level-readout { color: var(--chrome-bright); opacity: 0.8; flex: 0 0 auto; }
+#player-level #attune-name { text-align: right; }
+
+/* Level-up — a single restrained flare on the vitals cluster. No
+   full-screen banner: this is the floor of progression, and dressing
+   it like a milestone would undercut the Ascent, which is the system
+   that actually earns one. */
+@keyframes level-flare {
+  0%   { box-shadow: inset 0 0 0 1px var(--edge); }
+  35%  { box-shadow: inset 0 0 0 1px var(--chrome-bright), 0 0 22px var(--chrome); }
+  100% { box-shadow: inset 0 0 0 1px var(--edge); }
+}
+#hud-top-left.level-flare { animation: level-flare 1.1s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  #hud-top-left.level-flare { animation: none; }
+}
+
+/* The Ascent — permanent rank, directly under the attunement line
+   that is deliberately NOT permanent. Two facts, two lines, stacked so
+   the difference is legible at a glance: what you ARE right now, and
+   how far down you have been. */
+#ascent-readout {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  color: var(--ink-dim);
+}
+#ascent-rank {
+  display: block;
+  color: var(--chrome-bright);
+  letter-spacing: 0.22em;
+}
+#ascent-ladder {
+  display: block;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--ink-faint);
+  margin-top: 1px;
+}
+
+/* The Leaning bar — two philosophies competing for one length.
+   Deliberately NOT a progress bar: it grows from BOTH ends toward a
+   marked middle, because neither end is "more" and there is nothing
+   here to fill up. Flat fills, hard edges, no radius — house rules
+   hold (see this file's header). */
+#leaning-readout { margin-top: 7px; }
+.leaning-labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+/* The two percentages take their own side's colour, always — this is
+   the one readout in the HUD that must mean the same thing in both
+   themes, since its whole job is telling you which theme you are
+   drifting toward. */
+#leaning-cinder-pct { color: #d94a1a; }
+#leaning-asc-pct { color: #e8d9a8; }
+#leaning-calling {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-dim);
+  /* A long emergent name must not push the two percentages out of
+     alignment or off the panel. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.leaning-bar {
+  position: relative;
+  display: flex;
+  height: 6px;
+  background: var(--well);
+  border: 1px solid var(--rule-strong);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.8);
+}
+.leaning-fill-cinder { background: #8f2a10; transition: width 0.4s; }
+.leaning-fill-asc { background: #c9b478; transition: width 0.4s; margin-left: auto; }
+/* The midpoint. A Pioneer sitting exactly here is genuinely nothing in
+   particular, and the mark is what makes that legible rather than
+   looking like a half-filled bar. */
+.leaning-midline {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--chrome-bright);
+  opacity: 0.85;
+}
+
+/* Descent tracker — only on screen while one is open, which is why it
+   can afford to be loud. The accent rule down its left edge is the
+   same device the character-creation section plates use: this is the
+   thing currently demanding attention. */
+#descent-tracker {
+  margin-top: 8px;
+  padding: 7px 9px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+}
+#descent-name {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+}
+#descent-phase {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.76rem;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+#hud-top-right { position: absolute; top: 16px; right: 16px; width: 172px; }
+
+/* The Pioneer, turntabling — same iron-framed-slot chrome as the rest
+   of the HUD, sized to actually show a standing figure rather than
+   a cramped bust. */
+#character-preview {
+  position: relative;
+  width: 160px; height: 190px;
+  margin-bottom: 8px;
+  background: radial-gradient(ellipse at 50% 30%, var(--panel-raised), var(--well) 85%);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge), inset 0 0 18px rgba(0,0,0,0.55);
+}
+#character-preview-canvas { display: block; width: 100%; height: 100%; }
+#character-preview::after {
+  /* A faint vignette so the turntable doesn't read as floating in
+     a flat rectangle — cheap, no extra draw calls, pure CSS. */
+  content: '';
+  position: absolute; inset: 0;
+  box-shadow: inset 0 0 24px 6px rgba(0,0,0,0.65);
+  pointer-events: none;
+}
+
+#minimap-container {
+  position: relative;
+  padding: 5px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+#minimap { display: block; width: 160px; height: 160px; }
+#compass {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: var(--chrome-bright);
+  text-shadow: var(--shadow-hard);
+}
+.hud-btn { width: 100%; margin-top: 6px; padding: 6px; font-size: 0.6rem; background: var(--scrim); }
+
+#quest-tracker {
+  margin-top: 8px; padding: 10px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+/* Same diegetic idle-fade contract as #hud-top-left.dim (see main.js's
+   _lastVitalsChangeAt) — a quest you're mid-way through doesn't need
+   full brightness once you've read it and nothing's changed. Styled
+   and ready; toggling the class from main.js (a "last quest update"
+   timestamp, same pattern) is the one line needed to switch it on —
+   not added here, main.js is out of this pass's scope. */
+#quest-tracker.dim { opacity: 0.3; }
+#quest-tracker.dim:hover { opacity: 1; }
+#quest-title { font-size: 0.7rem; letter-spacing: 0.14em; color: var(--chrome-bright); margin-bottom: 4px; }
+#quest-desc { font-size: 0.8rem; font-style: italic; color: var(--ink-dim); margin: 0; line-height: 1.4; }
+#quest-progress { font-size: 0.72rem; color: var(--ink); margin-top: 5px; }
+/* Empty div with no CSS box-model surprises when its text is '' —
+   deliberately no min-height, so a quest with no fixed destination
+   (see updateQuestCompass in main.js) collapses cleanly instead of
+   leaving a blank gap under the progress line. */
+#quest-marker { font-size: 0.7rem; letter-spacing: 0.04em; color: var(--chrome-bright); margin-top: 3px; }
+
+#crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.1rem; color: var(--ink); opacity: 0.4; }
+
+#interaction-prompt {
+  position: absolute;
+  bottom: 196px; left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 16px;
+  background: var(--scrim);
+  border: 1px solid var(--chrome);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.prompt-key {
+  font-family: var(--font-display);
+  border: 1px solid var(--chrome-bright);
+  color: var(--chrome-bright);
+  padding: 1px 6px;
+  margin-right: 5px;
+  font-size: 0.72rem;
+}
+
+#hud-bottom { position: absolute; bottom: 42px; left: 50%; transform: translateX(-50%); }
+
+/* One quiet line. Two dense rows of pipes competed with the wand bar
+   and read as debug output. */
+#key-hints {
+  position: absolute;
+  bottom: 5px; left: 50%;
+  opacity: 0.55;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 0.66rem;
+  font-style: italic;
+  color: var(--ink-faint);
+  line-height: 1.7;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+#key-hints em { font-style: normal; color: var(--ink-dim); }
+
+/* ── 10. THE ACTION BAR ─────────────────────────────────────
+   Round gem sockets set in an iron plinth. Everywhere else in this
+   UI is deliberately square and bookish; the action bar is the one
+   place that isn't, because it's read at a glance mid-fight dozens
+   of times a minute and a circle with a radial cooldown wedge
+   parses faster than a square with a rising shade.
+
+   Two groups in one bar: abilities (Z X C) then the wand's
+   infusion slots (1-6), split by a hairline so the two input
+   families stay visually distinct — they used to share number keys
+   and it was genuinely unclear which system a press would hit. */
+
+#wand-bar { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+.hotbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  background: linear-gradient(180deg, rgba(10,7,4,0.55), rgba(4,3,2,0.9));
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 var(--edge),
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    0 -1px 12px rgba(0,0,0,0.5);
+}
+.hotbar-group { display: flex; align-items: center; gap: 8px; }
+.hotbar-divider { width: 1px; align-self: stretch; background: var(--rule); opacity: 0.7; }
+.wand-equipped-icon { width: 28px; height: 28px; color: var(--chrome-bright); opacity: 0.85; }
+
+.wand-channel { width: 240px; opacity: 0; transition: opacity 0.12s; text-align: center; }
+.wand-channel.active { opacity: 1; }
+.channel-track { position: relative; height: 7px; background: var(--well); border: 1px solid var(--rule-strong); }
+.channel-fill { height: 100%; background: var(--chrome-bright); transition: width 0.05s linear; }
+.channel-mark { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink-dim); }
+.channel-tier {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  color: var(--ink-dim);
+}
+.channel-tier.tier-focus { color: var(--chrome-bright); }
+.channel-tier.tier-over  { color: var(--accent-bright); }
+.wand-channel.tier-pop .channel-track { animation: tierPop 0.22s steps(3); }
+@keyframes tierPop { 50% { transform: scaleY(2); } }
+
+/* ── The socket ── */
+.hotbar-slot {
+  position: relative;
+  width: 54px; height: 54px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+  /* Socket floor takes the slot's element colour at low alpha, so a
+     fire spell and an ice spell read apart even at a glance. */
+  background:
+    radial-gradient(circle at 50% 38%,
+      color-mix(in srgb, var(--slot-el, var(--chrome)) 26%, transparent) 0%,
+      rgba(6,4,3,0.92) 68%);
+  border: 1px solid var(--rule-strong);
+  box-shadow:
+    inset 0 0 0 1px var(--edge),
+    inset 0 3px 7px rgba(0,0,0,0.75),
+    0 1px 0 rgba(255,255,255,0.05);
+  transition: box-shadow 0.12s, border-color 0.12s, transform 0.08s;
+}
+.hotbar-slot:hover { transform: translateY(-2px); border-color: var(--chrome); }
+
+.hotbar-slot-empty {
+  background: radial-gradient(circle at 50% 38%, rgba(30,22,14,0.5) 0%, rgba(5,4,3,0.94) 70%);
+  border-color: var(--rule);
+  cursor: default;
+}
+.hotbar-slot-empty:hover { transform: none; border-color: var(--rule); }
+
+.hotbar-icon { width: 28px; height: 28px; color: var(--slot-el, var(--ink)); pointer-events: none; }
+.hotbar-icon.empty-icon { color: var(--ink-faint); opacity: 0.5; }
+
+/* Hotkey badge, hung off the bottom of the socket like a name plate */
+.hotbar-key {
+  position: absolute;
+  bottom: -7px; left: 50%;
+  transform: translateX(-50%);
+  min-width: 15px;
+  padding: 0 3px;
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--ink-dim);
+  background: var(--ground-deep);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Radial cooldown sweep. --cd runs 1 (just fired) → 0 (ready); the
+   conic wedge is drawn over the socket and shrinks anticlockwise. */
+.hotbar-cooldown {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    rgba(0,0,0,0.72) calc(var(--cd, 0) * 360deg),
+    transparent 0deg
+  );
+}
+
+/* ── Ability sockets (Z X C) ── */
+.hotbar-ability.active {
+  border-color: var(--chrome-bright);
+  box-shadow:
+    inset 0 0 0 1px var(--edge),
+    inset 0 3px 7px rgba(0,0,0,0.7),
+    0 0 12px color-mix(in srgb, var(--slot-el, var(--chrome-bright)) 60%, transparent);
+}
+
+/* ── Wand sockets (1-6) ── */
+.wand-slot-active {
+  border-color: var(--chrome-bright);
+}
+.wand-slot-active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--chrome-bright);
+  border-radius: 50%;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.wand-slot-dim { opacity: 0.45; filter: saturate(0.4); }
+.wand-slot-form {
+  position: absolute;
+  top: 1px; right: 3px;
+  width: 10px; height: 10px;
+  color: var(--ink-dim);
+  pointer-events: none;
+}
+.wand-slot-charges {
+  position: absolute;
+  top: 2px; left: 6px;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--ink-strong);
+  text-shadow: var(--shadow-hard);
+  pointer-events: none;
+}
+.wand-slot-charges.dim { color: var(--ink-faint); }
+/* Charge remaining, as an arc hugging the bottom of the socket */
+.wand-slot-chargebar {
+  position: absolute;
+  bottom: 5px; left: 12px; right: 12px;
+  height: 2px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.wand-slot-chargebar div {
+  height: 100%;
+  background: var(--slot-el, var(--chrome));
+  transition: width 0.2s;
+}
+
+/* Corner brackets on the whole bar — the one place this session
+   borrows the menu-panel filigree for something that isn't a panel,
+   because the bar reads as a loose row of circles without a frame
+   tying it together. */
+.hotbar-row { position: relative; }
+.hotbar-row > .filigree { inset: -2px; opacity: 0.55; }
+
+/* Mana/stamina cost — always visible, bottom-right, so "can I afford
+   this" doesn't require a hover. Blue-ish regardless of the spell's
+   own element, same convention as an MP bar, so it never gets
+   mistaken for the element-coloured icon above it. */
+.hotbar-cost {
+  position: absolute;
+  bottom: 2px; right: 4px;
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  color: var(--mp, #4ea0c9);
+  text-shadow: var(--shadow-hard);
+  pointer-events: none;
+}
+
+/* Hover tooltip — replaces the browser's native `title` (grey box,
+   half-second delay) with something that actually looks like it
+   belongs to the game and appears the instant the cursor lands. */
+.hotbar-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  min-width: 150px;
+  max-width: 220px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--rule-strong);
+  box-shadow: inset 0 0 0 1px var(--edge), 0 4px 14px rgba(0,0,0,0.6);
+  z-index: 50;
+  pointer-events: none;
+}
+.hotbar-tooltip.hidden { display: none; }
+.hotbar-tooltip-name {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+.hotbar-tooltip-meta {
+  font-size: 0.66rem;
+  color: var(--ink-dim);
+  margin-bottom: 4px;
+}
+.hotbar-tooltip-desc {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.75rem;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+/* ── 11. OVERLAY FEEDBACK ───────────────────────────────── */
+
+#overlays, #damage-numbers, #notifications { position: absolute; inset: 0; pointer-events: none; }
+
+/* Dread — low-HP vignette. A restrained horror beat: the frame itself
+   closes in and pulses like a heartbeat as death gets close, without
+   any jump-scare or gore. Opacity and --pulse-speed are set every
+   frame from main.js; the animation just breathes within whatever
+   opacity ceiling that frame allows. */
+#dread-vignette {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 45%,
+    rgba(50, 4, 4, 0.55) 85%,
+    rgba(20, 0, 0, 0.82) 100%
+  );
+  animation: dreadPulse var(--pulse-speed, 1.6s) ease-in-out infinite;
+}
+@keyframes dreadPulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.22); }
+}
+
+/* Death — the one moment this whole UI spends real red on, on
+   purpose: every other palette in this game is desaturated by design
+   (see EntityForge.js's SURFACES table), so one saturated colour
+   shown exactly once, at the one moment that should actually sting,
+   reads as far heavier than if red were already everywhere. */
+#death-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: radial-gradient(ellipse at center, rgba(24, 4, 4, 0.72) 0%, rgba(3, 0, 0, 0.94) 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+#death-overlay.show { opacity: 1; }
+.death-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  color: #b8402e;
+  text-shadow: 0 0 26px rgba(180, 40, 20, 0.55);
+}
+.death-sub {
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--ink-dim);
+}
+
+/* Lore reveal — a found-journal fragment. Shown, held, faded — the
+   manuscript metaphor the whole UI already runs on, not a separate
+   "horror UI" vocabulary bolted on top. Visibility/timing driven from
+   main.js via the .show class; this file only owns how it looks. */
+#lore-reveal {
+  position: absolute;
+  left: 50%; top: 22%;
+  transform: translate(-50%, -8px);
+  width: min(480px, 82vw);
+  padding: 18px 24px;
+  background: radial-gradient(ellipse at 50% 0%, var(--panel-raised), var(--well) 92%);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge), 0 10px 28px rgba(0,0,0,0.5);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+#lore-reveal.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.lore-reveal-title {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin-bottom: 8px;
+}
+.lore-reveal-text {
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* Finale choice — mq7's close, a real modal (reuses .menu-panel /
+   #menus-overlay, same as the satchel/forge) since this one genuinely
+   should block until the player picks something. */
+.finale-panel { width: min(520px, 90vw); }
+.finale-body { padding: 20px 22px 22px; }
+.finale-prompt {
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+.finale-choices { display: flex; flex-direction: column; gap: 10px; }
+.finale-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-left-color 0.15s ease;
+}
+.finale-choice-btn:hover { background: var(--panel-raised); border-left-color: var(--accent-bright); }
+.finale-choice-btn:active { background: var(--page-edge); border-left-color: var(--accent); }
+.finale-choice-title {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+}
+.finale-choice-sub { font-size: 0.78rem; font-style: italic; color: var(--ink-dim); }
+
+/* Finale narration — same manuscript language as the lore reveal,
+   held much longer (a closing beat, not a pickup), centred lower so
+   it doesn't collide with the (closed, by this point) modal above. */
+#finale-narration {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 86vw);
+  padding: 22px 28px;
+  background: radial-gradient(ellipse at 50% 0%, var(--panel-raised), var(--well) 92%);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge), 0 14px 34px rgba(0,0,0,0.6);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  z-index: 250;
+}
+#finale-narration.show { opacity: 1; }
+#finale-narration .lore-reveal-text { white-space: pre-line; }
+
+/* Unease whisper — the one other restrained horror beat, rationed to
+   rare and brief on purpose (see UNEASE_WHISPERS in story.js and its
+   exposure-timer gate in main.js). Small, off-centre, faintly
+   unsteady — the opposite of the bold centred reaction-flash text,
+   deliberately: this isn't a gameplay event, it's a wrongness. */
+#unease-whisper {
+  position: absolute;
+  left: 58%; top: 38%;
+  transform: translate(-50%, -50%);
+  font-style: italic;
+  font-size: 0.98rem;
+  letter-spacing: 0.03em;
+  color: rgba(210, 200, 190, 0.0);
+  text-shadow: 0 0 10px rgba(0,0,0,0.9);
+  pointer-events: none;
+  animation: none;
+}
+#unease-whisper.show {
+  animation: whisperFlicker 3.4s ease-in-out forwards;
+}
+@keyframes whisperFlicker {
+  0%   { color: rgba(210, 200, 190, 0); }
+  8%   { color: rgba(210, 200, 190, 0.5); }
+  11%  { color: rgba(210, 200, 190, 0.08); }
+  14%  { color: rgba(210, 200, 190, 0.48); }
+  70%  { color: rgba(210, 200, 190, 0.4); }
+  100% { color: rgba(210, 200, 190, 0); }
+}
+
+.damage-number {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+  text-shadow: var(--shadow-hard);
+  animation: dmgRise 1s ease-out forwards;
+}
+.damage-number.crit, .damage-number.spell-dmg { color: var(--chrome-bright); font-size: 1.35rem; }
+.damage-number.heal { color: var(--stamina); }
+.damage-number.reaction { font-size: 1.7rem; color: var(--accent-bright); letter-spacing: 0.06em; }
+@keyframes dmgRise {
+  0%   { opacity: 0; transform: translateY(6px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-38px); }
+}
+
+#notifications { display: flex; flex-direction: column; align-items: center; gap: 4px; top: 76px; bottom: auto; }
+.notification {
+  max-width: 62vw;
+  padding: 7px 18px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+  font-size: 0.86rem;
+  color: var(--ink);
+  animation: notifIn 0.18s ease-out;
+}
+@keyframes notifIn { from { opacity: 0; transform: translateY(-6px); } }
+
+.reaction-flash {
+  position: absolute;
+  top: 30%; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--accent-bright);
+  text-shadow: var(--shadow-hard);
+  animation: reactionFlash 1.4s ease-out forwards;
+}
+@keyframes reactionFlash {
+  0%   { opacity: 0; }
+  16%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-26px); }
+}
+
+/* ── 12. PANEL SHELL ────────────────────────────────────── */
+
+#menus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  /* A vignette, not a flat matte — the panel reads as sitting in front
+     of a darkened room rather than pasted on a solid rectangle. House
+     rule stays: no backdrop-filter, panels are solid objects, so this
+     is depth from gradient + shadow only, same trick as the character
+     preview vignette and the lore-reveal panel a few sections down. */
+  background: radial-gradient(ellipse at 50% 42%, rgba(6, 4, 3, 0.62) 0%, rgba(0, 0, 0, 0.84) 100%);
+}
+/* Panels stack in the same cell; only one is ever un-hidden. */
+#menus-overlay > .menu-panel { grid-area: 1 / 1; }
+
+.menu-panel {
+  position: relative;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px var(--edge),
+    inset 0 0 0 2px var(--rule),
+    0 24px 60px rgba(0, 0, 0, 0.65);
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--panel-raised);
+}
+/* Panel titles were only 0.92rem — barely bigger than in-panel content
+   like .rr-name (0.98rem) or .forge-detail-title (0.96rem), so a
+   brewed spell's own name could read louder than the panel it sat in.
+   Bumped so the title is unambiguously the top of the hierarchy. */
+.menu-header h2 { font-size: 1.05rem; letter-spacing: 0.26em; color: var(--chrome-bright); }
+
+/* ── 13. THE SATCHEL (INVENTORY) ─────────────────────────── */
+
+.inventory-panel { width: min(640px, 94vw); display: flex; flex-direction: column; }
+
+/* Loadout — what's worn. Pinned at the top, never scrolls away. */
+.satchel-loadout { padding: 12px 16px 4px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+.satchel-loadout-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 8px;
+}
+.equipment-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-bottom: 12px; }
+.equip-slot { text-align: center; }
+.equip-label { border: none; margin-bottom: 5px; padding: 0; font-size: 0.54rem; }
+.equip-dropzone { height: 54px; display: grid; place-items: center; border: 1px dashed var(--rule); color: var(--ink-faint); background: var(--well); }
+.equip-dropzone.drag-over { border-color: var(--chrome-bright); border-style: solid; }
+.equip-dropzone .inv-item-icon { width: 34px; height: 34px; }
+
+/* Search — same shelf language as the Cauldron and Forge. */
+.satchel-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.satchel-search-row .shelf-search { flex: 1; min-width: 0; }
+.satchel-count {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compartments — the bag itself, grouped instead of one flat grid. */
+.satchel-compartments { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 16px; }
+.satchel-compartment + .satchel-compartment { margin-top: 16px; }
+.satchel-compartment-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 0 5px;
+  margin-bottom: 8px;
+}
+.satchel-compartment:first-child .satchel-compartment-label { padding-top: 0; }
+.satchel-compartment-count { color: var(--ink-dim); letter-spacing: 0; font-size: 0.68rem; }
+.satchel-compartment-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+
+.inv-slot {
+  position: relative; aspect-ratio: 1;
+  display: grid; place-items: center;
+  cursor: grab;
+  background: var(--well);
+  transition: border-color 0.1s, background 0.1s;
+}
+/* Same "lift toward panel-raised" hover convention as .shelf-row and
+   .forge-recipe-row — a border-only change here read as barely there. */
+.inv-slot:hover { border-color: var(--rule-strong); background: var(--panel-raised); }
+.inv-slot.drag-over { border-color: var(--chrome-bright); }
+.inv-item-icon { width: 66%; height: 66%; color: var(--slot-el, var(--ink)); }
+.inv-item-count {
+  position: absolute;
+  bottom: 1px; right: 3px;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  color: var(--ink-strong);
+  text-shadow: var(--shadow-hard);
+}
+
+#inv-tooltip {
+  position: fixed;
+  z-index: 900;
+  max-width: 250px;
+  padding: 9px 12px;
+  background: var(--panel);
+  border: 1px solid var(--rule-strong);
+  box-shadow: inset 0 0 0 1px var(--edge), 0 6px 18px rgba(0,0,0,0.6);
+  pointer-events: none;
+  font-size: 0.82rem;
+}
+.tooltip-title { font-family: var(--font-display); font-size: 0.86rem; letter-spacing: 0.06em; }
+.tooltip-tier {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 2px 0 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+}
+.tooltip-body { color: var(--ink-dim); line-height: 1.5; }
+.tooltip-body em { font-style: normal; color: var(--chrome-bright); }
+
+/* ── 14. STATS ──────────────────────────────────────────── */
+
+.stats-panel { width: min(430px, 94vw); }
+.stats-container { padding: 16px 18px; overflow-y: auto; }
+.stat-info { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
+.stat-name { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--ink-dim); }
+.stat-val { color: var(--ink-strong); }
+.stat-hr { height: 1px; background: var(--rule); margin: 14px 0; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stat-box { padding: 10px 4px; text-align: center; background: var(--well); }
+.stat-box-label { display: block; font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.14em; color: var(--ink-dim); }
+.stat-box-val { display: block; font-family: var(--font-display); font-size: 1.15rem; color: var(--chrome-bright); }
+.stat-txt { font-size: 0.86rem; font-style: italic; color: var(--ink-dim); line-height: 1.55; margin-bottom: 12px; }
+.stat-txt-list { font-size: 0.86rem; color: var(--ink); }
+
+/* ── 15. CAULDRON ───────────────────────────────────────── */
+
+.cauldron-panel { width: min(1180px, 96vw); }
+.cauldron-body { display: grid; grid-template-columns: 238px 1fr 310px; overflow: hidden; min-height: 0; flex: 1; }
+
+.cauldron-shelf { display: flex; flex-direction: column; border-right: 1px solid var(--rule); overflow: hidden; }
+.shelf-head { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--rule); }
+.shelf-title { border: none; margin: 0; padding: 0; white-space: nowrap; }
+.shelf-search { flex: 1; min-width: 0; }
+.shelf-list { overflow-y: auto; flex: 1; }
+
+.shelf-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto 22px;
+  gap: 7px;
+  align-items: center;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+.shelf-marks { display: flex; align-items: center; gap: 3px; }
+.shelf-row:hover { background: var(--panel-raised); }
+.shelf-icon { width: 24px; height: 24px; color: var(--row-el, var(--ink-dim)); }
+.shelf-name { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-forms { display: flex; gap: 2px; color: var(--ink-faint); }
+.shelf-forms .sigil { width: 15px; height: 15px; }
+.shelf-tag { font-family: var(--font-display); font-size: 0.66rem; }
+.shelf-tag.stab { color: var(--mp); }
+.shelf-tag.amp  { color: var(--chrome-bright); }
+.shelf-count { font-family: var(--font-display); font-size: 0.76rem; color: var(--ink-dim); text-align: right; white-space: nowrap; }
+.shelf-empty, .transmute-empty, .wand-potion-empty, .forge-detail-placeholder {
+  padding: 30px 20px;
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-faint);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.cauldron-centre { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 12px 14px; overflow-y: auto; }
+.cauldron-pot { position: relative; width: 96px; height: 96px; display: grid; place-items: center; flex-shrink: 0; }
+.pot-glow { position: absolute; inset: 6px; border: 1px solid currentColor; border-radius: 50%; opacity: 0; transition: opacity 0.3s, color 0.3s; }
+.pot-icon { width: 68px; height: 68px; color: var(--chrome); }
+.cauldron-pot.pot-flash .pot-icon { animation: potFlash 0.7s ease-out; }
+@keyframes potFlash {
+  0%   { color: var(--flash-color, #fff); transform: scale(1.1); }
+  100% { color: var(--chrome); transform: scale(1); }
+}
+
+.cauldron-slots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.pot-slot {
+  width: 92px; height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  cursor: pointer;
+  background: var(--well);
+}
+.pot-slot { transition: border-color 0.1s, background 0.1s; }
+.pot-slot.empty { border-style: dashed; box-shadow: none; }
+.pot-slot.empty:hover { border-color: var(--chrome); }
+.pot-slot-plus { color: var(--ink-faint); font-size: 1.2rem; font-family: var(--font-display); }
+.pot-slot.filled { border-color: var(--slot-el, var(--rule-strong)); }
+/* A filled slot is just as clickable (click to take the reagent back)
+   as an empty one, but only the empty state used to react to a hover
+   — the pot read as inert once something was in it. */
+.pot-slot.filled:hover { background: var(--panel-raised); border-color: var(--chrome-bright); }
+.pot-slot-icon { width: 34px; height: 34px; color: var(--slot-el, var(--ink)); }
+.pot-slot-name { font-size: 0.64rem; text-align: center; color: var(--ink-dim); line-height: 1.15; }
+
+.cauldron-actions { display: flex; gap: 10px; align-items: center; }
+.cauldron-tip { font-size: 0.76rem; font-style: italic; color: var(--ink-faint); text-align: center; }
+
+.cauldron-readout { border-left: 1px solid var(--rule); background: var(--page); padding: 16px 18px; overflow-y: auto; font-size: 0.86rem; }
+.readout-empty { font-style: italic; color: var(--ink-dim); line-height: 1.6; }
+.readout-empty-icon { width: 46px; height: 46px; margin: 0 auto 10px; color: var(--ink-faint); }
+.readout-empty strong { font-style: normal; color: var(--ink); }
+.readout-empty em { font-style: normal; color: var(--accent-bright); }
+.readout-empty-sub { font-size: 0.82rem; margin: 8px 0 14px; }
+.readout-forms { display: flex; flex-direction: column; gap: 8px; }
+.readout-form-row { display: grid; grid-template-columns: 22px 62px 1fr; gap: 8px; align-items: center; font-size: 0.78rem; }
+.rf-icon { width: 22px; height: 22px; color: var(--chrome); }
+.rf-name { font-family: var(--font-display); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.rf-blurb { font-style: italic; color: var(--ink-dim); }
+
+.readout-result { border: 1px solid var(--rule-strong); padding: 13px; margin-bottom: 16px; background: var(--panel); }
+.rr-head { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+.rr-icon { width: 46px; height: 46px; flex-shrink: 0; color: var(--spell, var(--ink)); }
+.rr-name { font-family: var(--font-display); font-size: 0.98rem; letter-spacing: 0.06em; color: var(--ink-strong); }
+.rr-tier { font-family: var(--font-display); font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px; }
+.rr-new { background: var(--accent); color: var(--accent-ink); padding: 1px 5px; margin-left: 6px; }
+.rr-desc { font-style: italic; color: var(--ink-dim); line-height: 1.55; margin: 0 0 10px; }
+.rr-fusion {
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px;
+  margin-bottom: 10px;
+  color: var(--chrome-bright);
+  border-top: 1px solid var(--chrome);
+  border-bottom: 1px solid var(--chrome);
+}
+.rr-near { font-size: 0.78rem; font-style: italic; color: var(--chrome-bright); border-left: 2px solid var(--chrome); padding: 5px 9px; margin-bottom: 10px; line-height: 1.45; }
+.rr-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.rr-stat { background: var(--panel); padding: 7px 3px; text-align: center; }
+.rr-stat span { display: block; font-family: var(--font-display); font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+.rr-stat strong { font-family: var(--font-display); font-size: 0.92rem; color: var(--ink-strong); }
+
+.readout-section { margin-bottom: 16px; }
+.bar-row { display: grid; grid-template-columns: 88px 1fr 30px; gap: 8px; align-items: center; margin-bottom: 4px; }
+.bar-label { display: flex; align-items: center; gap: 5px; font-size: 0.76rem; text-transform: capitalize; color: var(--ink); }
+.bar-label .sigil { width: 14px; height: 14px; flex-shrink: 0; }
+.bar-track { height: 8px; background: var(--well); border: 1px solid var(--rule); }
+.bar-fill { height: 100%; transition: width 0.2s; }
+.bar-fill.form { background: var(--chrome); }
+.bar-pct { font-family: var(--font-display); font-size: 0.62rem; color: var(--ink-dim); text-align: right; }
+
+.stability-meter { position: relative; height: 20px; background: var(--well); border: 1px solid var(--rule); }
+.stability-fill { height: 100%; transition: width 0.2s; }
+.stability-meter.calm   .stability-fill { background: var(--stamina); }
+.stability-meter.warn   .stability-fill { background: var(--chrome); }
+.stability-meter.danger .stability-fill { background: var(--accent); }
+.stability-meter.danger { border-color: var(--accent-bright); }
+.stability-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-strong);
+  text-shadow: var(--shadow-hard);
+}
+.stability-note { font-size: 0.78rem; font-style: italic; color: var(--ink-dim); margin-top: 7px; line-height: 1.5; }
+
+/* ── 16. WAND MENU ──────────────────────────────────────── */
+
+.wand-menu-panel { width: min(1000px, 95vw); }
+.wand-menu-hint { padding: 11px 18px; font-size: 0.84rem; font-style: italic; color: var(--ink-dim); line-height: 1.55; border-bottom: 1px solid var(--rule); }
+.wand-menu-hint em { font-style: normal; color: var(--chrome-bright); }
+.wand-menu-body { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; min-height: 0; flex: 1; }
+.wand-slot-column { border-right: 1px solid var(--rule); }
+.wand-slot-column, .wand-potion-column { overflow-y: auto; padding: 14px; }
+.wand-col-head { position: sticky; top: -14px; background: var(--panel); z-index: 1; padding-top: 4px; }
+
+.wand-menu-slot {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 42px 1fr 20px;
+  gap: 10px;
+  align-items: center;
+  padding: 11px;
+  margin-bottom: 7px;
+  border: 1px solid var(--rule);
+  background: var(--well);
+  cursor: pointer;
+}
+.wand-menu-slot:hover { border-color: var(--rule-strong); }
+.wand-menu-slot.active { border-color: var(--slot-el, var(--chrome-bright)); }
+.wand-menu-slot.dim { opacity: 0.55; }
+.wms-key { font-family: var(--font-display); font-size: 0.64rem; color: var(--ink-faint); text-align: center; }
+.wms-icon { width: 42px; height: 42px; color: var(--slot-el, var(--ink-dim)); }
+.wms-name { font-family: var(--font-display); font-size: 0.84rem; letter-spacing: 0.04em; color: var(--ink-strong); }
+.wms-dim-tag { font-size: 0.5rem; letter-spacing: 0.16em; padding: 1px 5px; margin-left: 6px; border: 1px solid var(--ink-faint); color: var(--ink-faint); }
+.wms-desc, .wms-meta { font-size: 0.78rem; color: var(--ink-dim); margin-top: 2px; }
+.wms-desc { font-style: italic; }
+.wms-meta > span:first-child { text-transform: capitalize; }
+.wms-meta .sigil { width: 12px; height: 12px; display: inline-block; vertical-align: -2px; }
+.wms-charge-track { height: 3px; background: var(--panel); border: 1px solid var(--rule); margin-top: 6px; }
+.wms-charge-fill { height: 100%; background: var(--slot-el, var(--chrome)); transition: width 0.2s; }
+.wms-charge-text { font-size: 0.7rem; color: var(--ink-faint); margin-top: 3px; font-style: italic; }
+.wms-clear { background: none; border: none; color: var(--ink-faint); font-size: 1rem; padding: 0; transition: color 0.1s; }
+.wms-clear:hover { color: var(--accent-bright); }
+.wms-clear:active { color: var(--accent); }
+
+.wand-potion-row {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 7px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--row-el, var(--chrome));
+  background: var(--well);
+}
+.wpr-icon { width: 38px; height: 38px; color: var(--row-el, var(--ink)); }
+.wpr-name { font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.04em; }
+.wpr-count { color: var(--ink-dim); }
+.wpr-meta { font-size: 0.76rem; color: var(--ink-dim); margin-top: 2px; }
+.wpr-volatile { color: var(--accent-bright); }
+.wpr-infuse { padding: 7px 12px; font-size: 0.6rem; letter-spacing: 0.1em; }
+.wpr-infuse.refill { border-color: var(--stamina); color: var(--stamina); }
+
+/* ── 17. GRIMOIRE ───────────────────────────────────────── */
+
+.grimoire-panel { width: min(1140px, 96vw); }
+.grimoire-tabs, .forge-tabs { display: flex; border-bottom: 1px solid var(--rule); background: var(--panel-raised); }
+.gtab, .ftab {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--rule);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-dim);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+}
+.gtab, .ftab { transition: color 0.1s, border-color 0.1s, background 0.1s; }
+.gtab:hover, .ftab:hover { color: var(--ink); }
+.gtab:active, .ftab:active { color: var(--chrome-bright); background: var(--panel-raised); }
+.gtab.active, .ftab.active { color: var(--chrome-bright); border-bottom-color: var(--chrome-bright); background: var(--panel); }
+
+.grimoire-stats { padding: 12px 18px; border-bottom: 1px solid var(--rule); }
+.gstat-row { display: flex; gap: 22px; margin-bottom: 7px; }
+.grimoire-stat { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); }
+.grimoire-progress-bar { height: 3px; background: var(--well); border: 1px solid var(--rule); }
+.grimoire-progress-fill { height: 100%; background: var(--chrome-bright); transition: width 0.3s; }
+
+.grimoire-content { overflow: auto; padding: 16px 18px 20px; flex: 1; min-height: 0; background: var(--page); }
+.matrix-hint, .transmute-hint {
+  font-size: 0.84rem;
+  font-style: italic;
+  color: var(--ink-dim);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  padding-left: 12px;
+  border-left: 2px solid var(--chrome);
+}
+
+.matrix-grid { display: flex; flex-direction: column; min-width: 760px; }
+.matrix-row { display: grid; grid-template-columns: 118px repeat(5, 1fr); }
+.matrix-col-head { text-align: center; padding: 6px 2px 10px; }
+.mch-icon { width: 22px; height: 22px; margin: 0 auto 3px; color: var(--chrome); }
+.mch-name { font-family: var(--font-display); font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+.matrix-row-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px 0 2px;
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--rule);
+}
+.matrix-row-head .sigil { width: 17px; height: 17px; flex-shrink: 0; }
+.matrix-cell {
+  min-height: 62px;
+  padding: 7px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  border: 1px solid var(--rule);
+  margin: -0.5px 0 0 -0.5px;
+}
+.matrix-cell.locked { opacity: 0.22; }
+.mc-lock { width: 18px; height: 18px; color: var(--ink-faint); }
+.matrix-cell.found { background: var(--panel); border-color: var(--cell-el, var(--rule-strong)); }
+.mc-icon { width: 27px; height: 27px; color: var(--cell-el, var(--ink)); }
+.mc-name { font-size: 0.66rem; line-height: 1.15; color: var(--ink); }
+
+.fusion-grid, .reaction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); gap: 9px; }
+.fusion-card, .reaction-card { padding: 13px; background: var(--panel); }
+.fusion-card.locked { opacity: 0.4; }
+.fusion-card.found { border-color: var(--fc, var(--chrome)); }
+.fusion-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.fusion-icon { width: 30px; height: 30px; color: var(--fc, var(--ink)); }
+.fusion-name { font-family: var(--font-display); font-size: 0.86rem; letter-spacing: 0.06em; color: var(--ink-strong); }
+.fusion-pair { font-size: 0.76rem; text-transform: capitalize; }
+.fusion-plus { color: var(--ink-faint); margin: 0 5px; }
+.fusion-unknown { font-size: 0.76rem; font-style: italic; color: var(--ink-faint); margin-top: 7px; }
+.fusion-desc { font-size: 0.8rem; font-style: italic; color: var(--ink-dim); line-height: 1.5; margin: 8px 0; }
+.fusion-forms { display: flex; gap: 4px; }
+.ff-chip { width: 21px; height: 21px; display: grid; place-items: center; border: 1px solid var(--rule); color: var(--ink-faint); opacity: 0.4; }
+.ff-chip .sigil { width: 14px; height: 14px; }
+.ff-chip.on { opacity: 1; color: var(--fc, var(--chrome-bright)); border-color: currentColor; }
+
+.reaction-card { border-left: 2px solid var(--rc, var(--accent)); }
+.reaction-name { font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.16em; color: var(--rc, var(--accent-bright)); }
+.reaction-pair { font-size: 0.76rem; text-transform: capitalize; margin: 5px 0; }
+.reaction-mult { font-family: var(--font-display); font-size: 0.7rem; color: var(--chrome-bright); }
+.reaction-blurb { font-size: 0.78rem; font-style: italic; color: var(--ink-dim); line-height: 1.5; margin: 6px 0 0; }
+
+/* ── 18. FORGE ──────────────────────────────────────────── */
+
+.forge-panel { width: min(960px, 95vw); }
+
+/* Codex — found-journal fragments, kept. */
+.codex-panel { width: min(640px, 92vw); }
+.codex-count {
+  padding: 10px 18px;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--rule);
+  background: var(--scrim);
+}
+.codex-list { overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.codex-entry {
+  padding: 12px 14px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+}
+.codex-entry.locked { border-left-color: var(--rule); opacity: 0.55; }
+.codex-entry-title {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin-bottom: 5px;
+}
+.codex-entry.locked .codex-entry-title { color: var(--ink-dim); }
+.codex-entry-text { font-size: 0.85rem; font-style: italic; line-height: 1.5; color: var(--ink); }
+.forge-content { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.forge-layout-new { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; min-height: 0; flex: 1; }
+.forge-left { display: flex; flex-direction: column; overflow: hidden; min-height: 0; border-right: 1px solid var(--rule); }
+.forge-filters { display: flex; gap: 7px; padding: 12px; border-bottom: 1px solid var(--rule); }
+.forge-filters .shelf-search { flex: 1; min-width: 0; }
+.forge-recipe-list { overflow-y: auto; flex: 1; }
+.forge-cat-label { margin: 0; padding: 8px 12px 5px; }
+.forge-recipe-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 9px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.forge-recipe-row:hover { background: var(--panel-raised); }
+.forge-recipe-row.craftable { border-left-color: var(--stamina); }
+.forge-recipe-row.insufficient { opacity: 0.46; }
+.forge-recipe-row.selected { background: var(--page-edge); border-left-color: var(--chrome-bright); }
+.forge-row-icon { width: 24px; height: 24px; color: var(--ink-dim); }
+.forge-can-badge { font-family: var(--font-display); font-size: 0.6rem; color: var(--stamina); }
+
+.forge-detail-panel { padding: 16px 18px; overflow-y: auto; background: var(--page); }
+.forge-detail-title { font-family: var(--font-display); font-size: 0.96rem; letter-spacing: 0.06em; color: var(--ink-strong); display: flex; align-items: center; gap: 9px; }
+.forge-detail-title .sigil { width: 30px; height: 30px; flex-shrink: 0; }
+.forge-detail-desc { font-size: 0.84rem; font-style: italic; color: var(--ink-dim); line-height: 1.55; margin: 6px 0 14px; }
+.forge-qty-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.forge-qty-label { border: none; margin: 0; padding: 0; display: inline-block; }
+.forge-ingredients-list { margin-bottom: 16px; }
+.forge-ing-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto 16px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.84rem;
+}
+.forge-ing-icon { width: 22px; height: 22px; color: var(--ink-dim); }
+.forge-ing-name { text-transform: capitalize; }
+.forge-ing-count { font-family: var(--font-display); font-size: 0.72rem; color: var(--ink-dim); }
+.forge-ing-row.met .forge-ing-check { color: var(--stamina); }
+.forge-ing-row.unmet { opacity: 0.6; }
+.forge-ing-row.unmet .forge-ing-check { color: var(--accent-bright); }
+.forge-craft-button { width: 100%; }
+
+.transmute-grid { display: flex; flex-direction: column; overflow-y: auto; flex: 1; min-height: 0; }
+.transmute-hint { margin: 16px 18px 12px; }
+.transmute-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 11px;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid var(--row-el, var(--chrome));
+}
+.tr-icon { width: 36px; height: 36px; color: var(--row-el, var(--ink)); }
+.tr-name { font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.04em; }
+.tr-count { color: var(--ink-dim); }
+.tr-yield { font-size: 0.78rem; font-style: italic; color: var(--ink-dim); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+.tr-yield .sigil { width: 15px; height: 15px; }
+.tr-actions { display: flex; gap: 5px; }
+/* Base look now comes from the shared .filter-chip/.qty-chip rule in
+   section 4 — this only carries what's actually different about it
+   (a solid raised background, since these buttons sit on the darker
+   --well row background and read as ghost-transparent otherwise). */
+.tr-actions button { background: var(--panel-raised); }
+
+/* ── 19. NARROW SCREENS ─────────────────────────────────── */
+
+@media (max-width: 1120px) {
+  .cauldron-body { grid-template-columns: 214px 1fr 288px; }
+  .matrix-grid { min-width: 660px; }
+}
+@media (max-width: 900px) {
+  .cauldron-body, .wand-menu-body, .forge-layout-new { grid-template-columns: 1fr; overflow-y: auto; }
+  .cauldron-shelf, .wand-slot-column, .forge-left { border-right: none; border-bottom: 1px solid var(--rule); }
+  .cauldron-readout { border-left: none; border-top: 1px solid var(--rule); }
+  .grimoire-content { overflow-x: auto; }
+  .path-grid { grid-template-columns: 1fr; }
+  #key-hints { display: none; }
+}
+
+/* ── 20. ATTUNEMENT ─────────────────────────────────────── */
+
+.attunement-panel { width: min(620px, 94vw); }
+.attune-hint {
+  padding: 11px 18px;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: var(--ink-dim);
+  line-height: 1.55;
+  border-bottom: 1px solid var(--rule);
+}
+.attune-body { padding: 16px 18px; overflow-y: auto; background: var(--page); }
+
+.attune-summary { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.attune-portrait { width: 54px; height: 54px; flex-shrink: 0; display: block; }
+.attune-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+  text-transform: capitalize;
+}
+.attune-sub { font-size: 0.8rem; font-style: italic; color: var(--ink-dim); margin-top: 3px; }
+
+.attune-doctrine { border: 1px solid var(--chrome); padding: 11px 13px; margin-bottom: 16px; }
+.attune-doctrine.pending {
+  border-style: dashed;
+  border-color: var(--rule);
+  color: var(--ink-faint);
+  font-style: italic;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.attune-doctrine-name {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+}
+.attune-doctrine-blurb { font-size: 0.84rem; font-style: italic; color: var(--ink-dim); margin: 6px 0; line-height: 1.5; }
+.attune-doctrine-effect { font-size: 0.8rem; color: var(--ink); }
+
+.attune-body .bar-row { grid-template-columns: 92px 1fr 34px 96px; }
+.attune-note { font-size: 0.68rem; color: var(--ink-dim); text-align: right; font-style: italic; }
+.attune-weak { color: var(--accent-bright); font-style: normal; }
+.attune-next {
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--ink-faint);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── 21. TARGET READ ────────────────────────────────────── */
+
+.target-read {
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 90px);
+  transform: translateY(-50%);
+  width: 208px;
+  padding: 10px 12px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+  pointer-events: none;
+}
+.tr-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.tr-name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: capitalize;
+  color: var(--ink-strong);
+}
+.tr-verdict {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.tr-verdict.good { color: var(--stamina); }
+.tr-verdict.mid  { color: var(--ink-dim); }
+.tr-verdict.bad  { color: var(--accent-bright); }
+.tr-made { display: flex; gap: 10px; margin-bottom: 8px; }
+.tr-el { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; }
+.tr-el .sigil { width: 15px; height: 15px; display: block; }
+.tr-strain { height: 15px; }
+.tr-strain .stability-label { font-size: 0.54rem; }
+
+.damage-number.resisted { color: var(--ink-faint); font-size: 0.95rem; }
+
+/* ── 20. THE JOURNAL (J) ────────────────────────────────── */
+
+/* Quest sidebar + local map. Deliberately wide and two-column: the
+   left half is a record you read, the right half is a place you look
+   at, and stacking them would make both worse. */
+.journal-panel {
+  width: min(920px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+}
+.journal-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  padding: 16px 18px 20px;
+  overflow: hidden;
+}
+.journal-quests { overflow-y: auto; max-height: 62vh; padding-right: 6px; }
+.journal-section { margin-bottom: 20px; }
+.journal-section h3 {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Three states, three weights. An active quest is the only one that
+   gets the accent rule; done recedes; locked is legible but plainly
+   not yet yours. */
+.journal-quest {
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--rule);
+}
+.journal-quest[data-state='active'] { border-left-color: var(--accent); background: var(--panel-raised); }
+.journal-quest[data-state='done']   { opacity: 0.5; }
+.journal-quest[data-state='locked'] { opacity: 0.32; }
+.jq-title {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.journal-quest[data-state='done'] .jq-title { text-decoration: line-through; }
+.jq-desc { font-size: 0.84rem; line-height: 1.5; color: var(--ink-dim); margin-top: 3px; }
+/* The tutorial's plain-language instruction. Set apart from the
+   flavour text above it on purpose — a player who cannot find the
+   cauldron is not being immersed, they are lost. */
+.jq-hint {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--chrome-bright);
+  margin-top: 5px;
+  padding-left: 8px;
+  border-left: 1px solid var(--chrome);
+}
+.jq-prog {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+.journal-empty { font-style: italic; color: var(--ink-faint); padding: 20px; text-align: center; }
+
+.journal-map-side { display: flex; flex-direction: column; gap: 8px; }
+#journal-map {
+  display: block;
+  width: 360px;
+  height: 360px;
+  max-width: 42vw;
+  border: 1px solid var(--chrome);
+  /* Image-rendering left default: the map is drawn with real
+     antialiased arcs and text, not a pixel grid, so crisp-edges would
+     only make the labels worse. */
+}
+.journal-map-controls { display: flex; gap: 6px; }
+.journal-map-controls .ghost-button { flex: 1; font-size: 0.56rem; padding: 6px 4px; }
+.journal-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.journal-map-legend i {
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.journal-map-legend .legend-scale { margin-left: auto; color: var(--ink-faint); font-style: normal; }
+
+@media (max-width: 820px) {
+  .journal-body { grid-template-columns: 1fr; }
+  #journal-map { max-width: 100%; width: 100%; height: auto; aspect-ratio: 1; }
+}
+
+/* ── 21. THE WORKING (cauldron techniques) ──────────────── */
+
+/* Technique buttons. Small, flat, square — these are tools, not the
+   loud accent-red Brew button, and the visual hierarchy has to say
+   "these are things you do on the way" rather than "press me". */
+.cauldron-techniques {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 10px 0 6px;
+}
+.tech-btn {
+  padding: 7px 3px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  color: var(--ink-dim);
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.tech-btn:hover { border-color: var(--chrome); color: var(--ink); background: var(--panel-raised); }
+.tech-btn:active { background: var(--rule); }
+
+/* The vessel's condition, in words rather than a meter. */
+.cauldron-state {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  text-align: center;
+  min-height: 1.3em;
+  margin-bottom: 6px;
+}
+/* Scorching is not an error state — it is a different recipe space —
+   so it takes the accent rather than a warning colour. */
+.cauldron-state[data-scorched='true'] { color: var(--accent-bright); font-style: normal; }
+
+/* ── 22. DESCENT COMPASS ────────────────────────────────── */
+
+/* Nearest known Descent Gate. Sits under the Ascent readout because
+   they are one loop: the Gate is where the next Trial comes from. */
+#descent-compass {
+  margin-top: 7px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--el-void);
+}
+#descent-compass-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+}
+#descent-compass-dist {
+  display: block;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.74rem;
+  color: var(--ink-dim);
+  margin-top: 1px;
+}
+
+/* ── 23. GRIMOIRE: RECIPES & CATALYSTS ──────────────────── */
+
+.grimoire-empty, .grimoire-lead {
+  font-style: italic;
+  color: var(--ink-dim);
+  line-height: 1.6;
+  padding: 14px 4px;
+  margin: 0 0 10px;
+}
+.grimoire-empty { text-align: center; padding: 36px 20px; color: var(--ink-faint); }
+
+/* A recipe reads as instructions, so it is set as a numbered list with
+   the techniques visibly subordinate to the ingredients — you count
+   reagents, not actions. */
+.recipe-list { display: grid; gap: 10px; }
+.recipe {
+  padding: 10px 12px;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--chrome);
+}
+.recipe-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.recipe-name {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+.recipe-meta {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.recipe-steps { list-style: none; margin: 0; padding: 0; }
+.rstep { display: flex; gap: 9px; font-size: 0.85rem; line-height: 1.65; }
+.rstep-n {
+  flex: none;
+  width: 1.4em;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--chrome-bright);
+}
+.rstep-add { color: var(--ink); }
+/* Techniques recede — they are the verbs between the nouns. */
+.rstep-tech { color: var(--ink-dim); font-style: italic; }
+.rstep-frag { color: var(--el-void); }
+.rstep-frag em { opacity: 0.65; font-size: 0.8em; }
+.recipe-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  font-style: italic;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+/* Catalyst reference: one row per fragment, cold and hot side by side
+   so the two aspects read as a choice rather than as two entries. */
+.cat-table { display: grid; gap: 6px; }
+.cat-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 1fr;
+  gap: 6px;
+  align-items: stretch;
+}
+.cat-el {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.cat-glyph { width: 20px; height: 20px; flex: none; color: var(--chrome-bright); }
+.cat-cell {
+  padding: 8px 10px;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Cold and hot take their own temperature, always — this table's whole
+   job is making the two aspects feel like different substances. */
+.cat-cold { border-left: 2px solid #4aa8ff; }
+.cat-hot  { border-left: 2px solid #d94a1a; }
+.cat-known { background: var(--panel-raised); }
+.cat-when {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cat-name {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.cat-blurb { font-style: italic; font-size: 0.78rem; color: var(--ink-dim); line-height: 1.45; }
+
+@media (max-width: 780px) {
+  .cat-row { grid-template-columns: 1fr; }
+}
+
+/* ── 24. RUNES ON THE LOOM ──────────────────────────────── */
+
+/* Runes inscribe from the shape of the working, so they appear and
+   vanish as the player draws — this row has to read as "something is
+   taking", not as a static list. */
+.loom-runes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  /* ⚠️ There is no cap on how many signs a weave holds any more, so
+     this strip has to be bounded or a seven-sign stack pushes the rune
+     grid off the panel. It scrolls; the grid does not move. */
+  max-height: 92px;
+  overflow-y: auto;
+  width: 100%;
+  margin-bottom: 4px;
+  /* ⚠️ flex-shrink: 0 is LOAD-BEARING. .cauldron-centre is a flex
+     column, and a flex child defaults to flex-shrink: 1 — so the
+     moment the column ran short of room (which the taller rune grid
+     immediately caused) this strip was crushed to height 0 while its
+     scrollHeight stayed 130. The chips and the confluence banner were
+     all correctly in the DOM and simply had no height to be drawn in,
+     which reads as "the signs stopped appearing" and sends you
+     hunting in the wrong file entirely. */
+  flex-shrink: 0;
+}
+.loom-rune {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px 4px 5px;
+  background: var(--panel-raised);
+  border: 1px solid var(--chrome);
+  color: var(--chrome-bright);
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* Was `help`. The chip is a control now — several signs can be laid
+     over one weave and clicking a chip strikes it out again. */
+  cursor: pointer;
+  /* Fades in rather than snapping — a rune taking hold is the single
+     most satisfying moment in the craft and deserves the beat. */
+  animation: rune-inscribe 0.35s ease-out;
+}
+/* Struck out on hover: the whole chip reads as the thing being
+   removed, rather than growing a separate × the house rules would
+   have to invent a shape for. */
+.loom-rune:hover, .loom-rune:focus-visible {
+  border-color: var(--accent-bright);
+  color: var(--accent-bright);
+  text-decoration: line-through;
+  outline: none;
+}
+.loom-rune-empty {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0.75;
+}
+@keyframes rune-inscribe {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+.loom-rune-glyph { width: 18px; height: 18px; flex: none; overflow: visible; }
+
+/* ── 25. THE RUNE GRID ──────────────────────────────────── */
+
+/* A hex field you drag across. Ornament is stroked geometry, per the
+   house rules — the trace is a path, the dots are circles, nothing is
+   a texture. */
+.rune-grid-wrap { margin: 6px 0 4px; }
+.rune-grid {
+  display: block;
+  width: 100%;
+  /* ⚠️ THIS is the dial that makes the grid bigger to draw on, not
+     RuneGridUI's SIZE — the SVG scales its viewBox to fit this width,
+     so cell spacing in viewBox units is invisible to the player and
+     only this is felt. Owner asked for the same 91 dots at a larger
+     size; 330 → 560 is that, and the centre column of .cauldron-body
+     (1fr of 1180 − 258 − 330 ≈ 592px) has the room for it. */
+  max-width: 560px;
+  /* ⚠️ Height cap too, not just width. The SVG keeps its viewBox
+     aspect ratio, so constraining height constrains width as well —
+     without this a 560px-wide field is ~490px tall and, with the pot
+     and a full strip of sign chips above it, the grid you actually
+     draw on ended up below the fold. Drawing is the primary
+     interaction in this panel; it does not get scrolled to. */
+  max-height: 42vh;
+  margin: 0 auto;
+  color: var(--chrome-bright);
+  /* The drag must not select the surrounding panel text, and on touch
+     it must not scroll the panel instead of drawing. */
+  user-select: none;
+  touch-action: none;
+  cursor: crosshair;
+}
+.rune-dots circle {
+  fill: var(--rule-strong);
+  transition: fill 0.1s, r 0.1s;
+}
+.rune-dots circle.lit { fill: var(--chrome-bright); r: 7; }
+/* A visible hover target — at 91 dots the field is dense and the
+   player needs to know which one the pointer has actually got. */
+.rune-grid:hover .rune-dots circle { fill: var(--chrome); }
+/* A True Rune — one of the authored landmark shapes — is the payoff
+   and is the only readout that gets the accent. */
+.rune-grid-readout[data-kind='true'] {
+  color: var(--accent-bright);
+  font-style: normal;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+.rune-trace { color: var(--chrome-bright); opacity: 0.95; }
+
+.rune-grid-readout {
+  text-align: center;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  min-height: 2.4em;
+  padding: 0 8px;
+}
+/* A recognised sign is the payoff — it gets the gold. */
+.rune-grid-readout[data-kind='known'] { color: var(--chrome-bright); font-style: normal; }
+/* ⚠️ A mishap is NOT an error and must not be styled like one. Most
+   shapes mean nothing; this is the normal outcome of experimenting and
+   colouring it red would make exploring feel like failing. */
+.rune-grid-readout[data-kind='mishap'] { color: var(--ink-faint); }
+
+/* The Loom's centre column has grown a rune grid under the handling
+   buttons, so it needs to scroll rather than run off the panel. */
+.cauldron-centre {
+  overflow-y: auto;
+  max-height: 78vh;
+  padding-right: 4px;
+}
+
+/* ── 26. THE ASCENT PANEL (K) ───────────────────────────── */
+
+.ascent-panel { width: min(760px, 94vw); max-height: 88vh; }
+.ascent-body { overflow-y: auto; max-height: 76vh; padding: 16px 20px 22px; }
+
+/* Standing — the one block that gets ornament, because it is the
+   answer to "what am I" and nothing else on the page competes. */
+.ascent-standing {
+  position: relative;
+  text-align: center;
+  padding: 22px 18px 18px;
+  background: rgba(var(--backdrop-rgb), 0.55);
+  border: 1px solid var(--chrome);
+  margin-bottom: 18px;
+  color: var(--chrome-bright);
+}
+.ascent-standing > .filigree { position: absolute; inset: 7px; width: auto; height: auto; opacity: 0.45; }
+.as-rank {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3.4vw, 1.8rem);
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+.as-ladder {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin-top: 4px;
+}
+.as-blurb {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  max-width: 34em;
+  margin: 4px auto 12px;
+}
+.as-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 20px;
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.as-meta b { color: var(--chrome-bright); }
+
+.ascent-block { margin-bottom: 18px; }
+.ascent-block h3 {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin: 0 0 9px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Two gates, side by side, NEVER merged into one bar — see AscentUI's
+   header. Depth alone does not ascend anyone and the layout has to say
+   so at a glance. */
+.as-gate {
+  padding: 9px 11px;
+  margin-bottom: 7px;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+}
+.as-gate[data-met='true'] { border-left-color: var(--chrome-bright); opacity: 0.72; }
+.as-gate-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.as-bar { height: 4px; background: var(--well); border: 1px solid var(--rule-strong); }
+.as-bar-fill { height: 100%; background: var(--chrome-bright); transition: width 0.3s; }
+.as-gate-note { font-style: italic; font-size: 0.8rem; color: var(--ink-dim); margin: 5px 0 0; }
+.as-warn {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.84rem;
+  color: var(--accent-bright);
+  margin: 8px 0 0;
+}
+.ascent-topped p { font-style: italic; color: var(--ink-dim); }
+
+.as-rungs { list-style: none; margin: 0; padding: 0; }
+.as-rung {
+  display: grid;
+  grid-template-columns: 2.4em 1fr auto 1.6fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.84rem;
+}
+.as-rung[data-state='done']   { opacity: 0.5; }
+.as-rung[data-state='here']   { background: var(--panel-raised); border-left: 2px solid var(--chrome-bright); }
+.as-rung[data-state='locked'] { opacity: 0.34; }
+.as-rung-tier {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--chrome-bright);
+}
+.as-rung-name {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.as-rung-depth { font-family: var(--font-display); font-size: 0.52rem; letter-spacing: 0.12em; color: var(--ink-faint); }
+.as-rung-grant { font-style: italic; color: var(--ink-dim); font-size: 0.8rem; }
+
+.as-trials { list-style: none; margin: 0; padding: 0; }
+.as-trials li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 9px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.84rem;
+}
+.as-trial-tier { font-family: var(--font-display); font-size: 0.54rem; letter-spacing: 0.14em; color: var(--chrome-bright); }
+.as-trial-name { flex: 1; color: var(--ink); }
+.as-trial-verb {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* The two verbs are opposite philosophies and must never look alike. */
+.as-trial-verb[data-verb='seal']   { color: #c9b478; }
+.as-trial-verb[data-verb='devour'] { color: var(--accent-bright); }
+.as-empty { font-style: italic; color: var(--ink-faint); padding: 14px 4px; }
+
+@media (max-width: 700px) {
+  .as-rung { grid-template-columns: 2.2em 1fr; }
+  .as-rung-depth, .as-rung-grant { grid-column: 2; }
+}
+
+/* ── 27. BINDINGS (V) ───────────────────────────────────── */
+
+.bind-panel { width: min(700px, 94vw); max-height: 86vh; position: relative; }
+.bind-lead {
+  font-style: italic; font-size: 0.86rem; line-height: 1.55;
+  color: var(--ink-dim); margin: 0; padding: 12px 20px 0;
+}
+.bind-flash {
+  min-height: 1.4em; padding: 4px 20px;
+  font-family: var(--font-display); font-size: 0.58rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.bind-flash[data-kind='good'] { color: var(--chrome-bright); }
+.bind-flash[data-kind='bad']  { color: var(--accent-bright); }
+.bind-body { overflow-y: auto; max-height: 62vh; padding: 0 20px 20px; }
+
+.bind-section { margin-bottom: 16px; }
+.bind-section h3 {
+  font-family: var(--font-display); font-size: 0.58rem;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--chrome-bright); margin: 0 0 8px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--rule);
+}
+.bind-row {
+  display: grid; grid-template-columns: 26px 1fr auto 5.5em;
+  gap: 10px; align-items: center;
+  padding: 7px 9px; margin-bottom: 4px;
+  background: var(--page); border: 1px solid var(--rule);
+  cursor: pointer; transition: border-color 0.12s, background 0.12s;
+}
+.bind-row:hover { border-color: var(--chrome); background: var(--panel-raised); }
+/* A dim Weave still binds — it just has no charges until re-woven. */
+.bind-row[data-dim='true'] { opacity: 0.55; }
+.bind-glyph { width: 22px; height: 22px; color: var(--ink-dim); }
+.bind-name { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink); }
+.bind-sub { font-style: italic; font-size: 0.76rem; color: var(--ink-faint);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 20em; }
+.bind-key {
+  font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.12em;
+  text-align: center; text-transform: uppercase;
+  padding: 3px 0; border: 1px solid var(--chrome); color: var(--chrome-bright);
+}
+.bind-key.unbound { border-color: var(--rule); color: var(--ink-faint); }
+.bind-empty { font-style: italic; font-size: 0.82rem; color: var(--ink-faint); padding: 8px 4px; margin: 0; }
+
+.bind-keymap { display: flex; flex-wrap: wrap; gap: 6px; }
+.bind-chip {
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 5px 10px; background: var(--panel-raised);
+  border: 1px solid var(--chrome); cursor: pointer; color: var(--ink);
+}
+.bind-chip:hover { border-color: var(--accent); }
+.bind-chip-key {
+  font-family: var(--font-display); font-size: 0.62rem;
+  letter-spacing: 0.1em; color: var(--chrome-bright);
+}
+.bind-chip-name { font-size: 0.78rem; font-style: italic; color: var(--ink-dim); }
+.bind-note { font-style: italic; font-size: 0.74rem; color: var(--ink-faint); margin: 8px 0 0; }
+
+/* ⚠️ Capture mode swallows every key, so it must be unmistakable. */
+.bind-capture {
+  position: absolute; inset: 0; z-index: 3;
+  display: grid; place-items: center;
+  background: rgba(var(--backdrop-rgb), 0.93);
+}
+.bind-capture-inner { text-align: center; padding: 30px 40px; border: 1px solid var(--chrome-bright); }
+.bind-capture-name {
+  font-family: var(--font-display); font-size: 1rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-strong);
+}
+.bind-capture-ask {
+  font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--chrome-bright); margin-top: 12px;
+}
+.bind-capture-esc { font-style: italic; font-size: 0.78rem; color: var(--ink-faint); margin-top: 10px; }
+
+/* ── 26. THE RITE & AWAKENING ───────────────────────────── */
+/* House rules: no border-radius, no backdrop-filter, no gradient fills
+   on controls, ornament is stroked geometry (ui/Sigil.js). Colours use
+   --chrome-bright rather than --foil because this panel sits on the
+   normal panel ground, not on --backdrop. */
+.lineage-panel { width: min(940px, 94vw); max-height: 88vh; }
+.lineage-body { padding: 14px 18px 20px; overflow-y: auto; max-height: calc(88vh - 58px); }
+
+.lineage-preamble, .lineage-note { color: var(--ink-dim); font-size: 0.82rem; line-height: 1.55; }
+.lineage-warning { color: var(--accent-bright); font-size: 0.68rem; letter-spacing: 0.12em;
+  text-transform: uppercase; font-family: var(--font-display); margin-top: 6px; }
+
+.lineage-reading {
+  display: grid; gap: 3px; padding: 10px 12px; margin: 12px 0 16px;
+  background: var(--well); border: 1px solid var(--rule);
+  border-left: 3px solid var(--chrome-bright);
+}
+.lineage-reading-label, .awaken-weapon-label, .lineage-standing-epithet {
+  font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.lineage-reading strong { color: var(--chrome-bright); font-size: 1.02rem; }
+.lineage-reading-why { color: var(--ink-dim); font-size: 0.82rem; font-style: italic; }
+
+.lineage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.lineage-card {
+  padding: 9px 11px; background: var(--panel-raised); border: 1px solid var(--rule);
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.lineage-card:hover, .lineage-card:focus-visible { border-color: var(--chrome); outline: none; }
+/* Selection is a hard inset rule, not a glow — depth comes from rules
+   and insets in this stylesheet, never from a soft shadow. */
+.lineage-card.picked { border-color: var(--chrome-bright); box-shadow: inset 0 0 0 1px var(--chrome-bright); }
+.lineage-card-head { display: flex; align-items: center; gap: 6px; }
+.lineage-card-mark { width: 16px; height: 16px; flex: none; color: var(--chrome-bright); }
+.lineage-card-mark svg { width: 100%; height: 100%; }
+.lineage-card-name { font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.08em; color: var(--ink-strong); }
+.lineage-card-tag {
+  margin-left: auto; font-family: var(--font-display); font-size: 0.52rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-bright);
+  border: 1px solid var(--accent); padding: 1px 4px;
+}
+.lineage-card-epithet { color: var(--ink-dim); font-size: 0.74rem; font-style: italic; margin-top: 3px; }
+.lineage-card-verb { color: var(--ink-faint); font-size: 0.68rem; margin-top: 4px; }
+
+.lineage-detail { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.lineage-detail h3 { font-family: var(--font-display); color: var(--chrome-bright); letter-spacing: 0.1em; }
+.lineage-creed { font-style: italic; color: var(--ink-dim); margin: 6px 0 10px; }
+
+.lineage-ladder { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 4px; }
+.lineage-ladder li {
+  display: grid; grid-template-columns: 26px 120px 1fr; gap: 8px; align-items: baseline;
+  padding: 5px 8px; border-left: 2px solid var(--rule); color: var(--ink-faint);
+}
+.lineage-ladder li.past { border-left-color: var(--chrome); color: var(--ink-dim); }
+.lineage-ladder li.at   { border-left-color: var(--chrome-bright); color: var(--ink-strong); background: var(--well); }
+.ladder-rung { font-family: var(--font-display); font-size: 0.7rem; color: var(--ink-faint); }
+.ladder-name { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.ladder-line { font-size: 0.78rem; font-style: italic; }
+
+.lineage-standing { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.lineage-standing-mark { width: 30px; height: 30px; color: var(--chrome-bright); flex: none; }
+.lineage-standing-mark svg { width: 100%; height: 100%; }
+.lineage-standing-name { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.1em; color: var(--chrome-bright); }
+
+.awaken-weapon { margin: 14px 0 10px; padding: 10px 12px; background: var(--well); border: 1px solid var(--rule); }
+.awaken-weapon strong { color: var(--ink-strong); display: block; margin: 2px 0; }
+.awaken-shared { display: block; font-size: 0.7rem; color: var(--ink-faint); font-style: italic; }
+.awaken-truename { margin-top: 6px; color: var(--ink-dim); font-size: 0.86rem; }
+.awaken-truename em { color: var(--chrome-bright); font-style: italic; }
+
+.awaken-track { height: 5px; background: var(--well); border: 1px solid var(--rule-strong); margin: 10px 0; }
+.awaken-track-fill { height: 100%; background: var(--chrome-bright); transition: width 0.4s ease; }
+
+.awaken-cost {
+  display: flex; justify-content: space-between; gap: 10px; margin-top: 12px;
+  padding: 8px 10px; border: 1px solid var(--rule); color: var(--ink-dim); font-size: 0.8rem;
+}
+.awaken-cost strong { color: var(--chrome-bright); }
+.awaken-have { color: var(--ink-faint); }
+
+.lineage-actions { margin-top: 16px; }
+.lineage-actions .brew-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Lineage readout — the third permanent line in the vitals cluster.
+   Styled as a sibling of #ascent-readout, not a variant: they are two
+   different facts that happen to sit next to each other. */
+#lineage-readout {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--chrome-bright);
+}
+#lineage-stage { color: var(--ink-faint); text-align: right; }
+/* Un-sounded reads as an open question rather than a stat. */
+#lineage-readout.unsounded #lineage-name { color: var(--ink-faint); font-style: italic; }
+
+/* Wand panel: bind control + the key chip.
+   Square, stroked, no gradient — the same object language as the rest
+   of the panel chrome, which the default <button> was ignoring. */
+.wms-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.wms-bind {
+  background: none;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-dim);
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.wms-bind:hover { color: var(--chrome-bright); border-color: var(--chrome); }
+/* Capture mode has to be LOUD — it swallows every keypress until it
+   takes one, and a player who cannot see that state will bind the
+   journal key to a spell by accident. */
+.wms-bind.capturing {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent-bright);
+  animation: bind-capture-pulse 1s ease-in-out infinite;
+}
+@keyframes bind-capture-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.62; } }
+@media (prefers-reduced-motion: reduce) { .wms-bind.capturing { animation: none; } }
+
+/* The bound key itself, as a chip rather than bare text. */
+.wms-key {
+  border: 1px solid var(--rule);
+  padding: 2px 0;
+  min-width: 22px;
+  color: var(--chrome-bright);
+}
+.wms-key.unbound { border-style: dashed; border-color: var(--rule); color: var(--ink-faint); }
+
+/* Confluence banner — what a STACK of signs is called. The name is the
+   payoff, so it gets the accent treatment the individual chips do not. */
+.loom-confluence {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0 5px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+.lc-name {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+.lc-count {
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
+
+/* The Descent objective — the loudest line in the tracker, because it
+   is the only one that tells the player what to do. */
+#descent-objective {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  margin-top: 3px;
+}
+#descent-objective[data-phase='clear'] { color: var(--chrome-bright); }
+#descent-objective[data-phase='warden'] { color: var(--accent-bright); }
+
+/* ── 27. THE LOOM — MEMORY FORGE (B) ───────────────────── */
+.forge-panel { width: min(1240px, 97vw); max-height: 90vh; display: flex; flex-direction: column; }
+.forge-body { display: grid; grid-template-columns: 250px 1fr 330px; overflow: hidden; min-height: 0; flex: 1; }
+.forge-col { padding: 12px 14px; overflow-y: auto; min-height: 0; }
+.forge-left { border-right: 1px solid var(--rule); }
+.forge-right { border-left: 1px solid var(--rule); display: flex; flex-direction: column; }
+.forge-centre { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.forge-col-head {
+  font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule); padding-bottom: 4px; margin: 10px 0 7px;
+}
+.forge-col-head:first-child { margin-top: 0; }
+.forge-empty { color: var(--ink-faint); font-size: 0.76rem; font-style: italic; padding: 5px 0; }
+
+.forge-vessel { width: 62px; height: 62px; color: var(--chrome); flex-shrink: 0; }
+.forge-vessel svg { width: 100%; height: 100%; }
+
+/* Form picker */
+.forge-forms { display: grid; gap: 4px; }
+.forge-form {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 7px; align-items: center;
+  padding: 6px 8px; border: 1px solid var(--rule); background: var(--panel-raised); cursor: pointer;
+}
+.forge-form:hover, .forge-form:focus-visible { border-color: var(--chrome); outline: none; }
+.forge-form.picked { border-color: var(--chrome-bright); box-shadow: inset 0 0 0 1px var(--chrome-bright); }
+.ff-name { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink-strong); }
+.ff-lead { font-family: var(--font-display); font-size: 0.55rem; color: var(--ink-faint); letter-spacing: 0.1em; }
+
+/* Cores */
+.forge-cores { display: grid; gap: 3px; }
+.forge-core {
+  display: grid; grid-template-columns: 16px 1fr auto auto; gap: 7px; align-items: center;
+  padding: 4px 7px; border: 1px solid transparent; cursor: pointer; font-size: 0.76rem;
+}
+.forge-core:hover { border-color: var(--rule); }
+.forge-core.committed { border-color: var(--chrome); background: var(--well); }
+.fc-el { width: 14px; height: 14px; color: var(--chrome); }
+.fc-el svg { width: 100%; height: 100%; }
+.fc-name { color: var(--ink-dim); }
+.fc-tier, .fc-count { font-family: var(--font-display); font-size: 0.56rem; color: var(--ink-faint); }
+.forge-committed { border: 1px solid var(--rule); padding: 4px; margin-bottom: 6px; background: var(--well); }
+
+/* Existing Memories you can ascend or rework */
+.forge-targets { display: grid; gap: 3px; }
+.forge-target { padding: 5px 7px; border: 1px solid var(--rule); cursor: pointer; }
+.forge-target:hover { border-color: var(--chrome); }
+.forge-target.picked { border-color: var(--chrome-bright); box-shadow: inset 0 0 0 1px var(--chrome-bright); }
+.ft-name { display: block; font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.06em; }
+.ft-grade { display: block; font-size: 0.64rem; color: var(--ink-faint); }
+
+/* Signs laid over this forging */
+.forge-signs {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
+  width: 100%; max-height: 84px; overflow-y: auto;
+  /* ⚠️ flex-shrink: 0 — a bounded scrolling strip in a flex COLUMN is
+     crushed to height 0 without it, and its contents vanish while
+     staying correctly in the DOM. Learned the hard way; see the
+     .loom-runes note. */
+  flex-shrink: 0;
+}
+.forge-sign {
+  display: flex; align-items: baseline; gap: 6px; padding: 3px 8px;
+  border: 1px solid var(--chrome); background: var(--panel-raised); cursor: pointer;
+  font-family: var(--font-display); font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.forge-sign:hover { border-color: var(--accent-bright); color: var(--accent-bright); text-decoration: line-through; }
+.fs-prop { color: var(--chrome-bright); }
+.fs-attr { color: var(--ink-faint); }
+
+/* The five rules, always on screen — the player must be able to aim. */
+.forge-rules { width: 100%; display: grid; gap: 2px; margin-top: 4px; flex-shrink: 0; }
+.forge-rule {
+  display: grid; grid-template-columns: 34px 92px 1fr; gap: 7px; align-items: baseline;
+  font-size: 0.68rem; color: var(--ink-faint); padding: 2px 4px; border-left: 2px solid var(--rule);
+}
+.fr-attr { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--chrome-bright); }
+.fr-name { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+
+/* The preview — the whole point of the right column */
+.forge-preview { flex: 1; min-height: 0; overflow-y: auto; }
+.fp-head { border-left: 3px solid var(--grade, var(--chrome)); padding: 4px 0 4px 9px; margin-bottom: 9px; }
+.fp-name { font-family: var(--font-display); font-size: 1.02rem; letter-spacing: 0.06em; color: var(--grade, var(--chrome-bright)); }
+.fp-grade { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.fp-aspects-head, .fp-flaws-head {
+  font-family: var(--font-display); font-size: 0.56rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint); margin: 9px 0 5px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 3px;
+}
+.fp-aspect { padding: 5px 0 6px 9px; border-left: 2px solid var(--chrome); margin-bottom: 5px; }
+.fp-aspect-name { font-family: var(--font-display); font-size: 0.74rem; letter-spacing: 0.06em; color: var(--chrome-bright); }
+.fp-aspect-line { font-size: 0.78rem; color: var(--ink-dim); }
+.fp-aspect-src { font-size: 0.62rem; color: var(--ink-faint); font-style: italic; }
+.fp-flaw { padding: 4px 0 4px 9px; border-left: 2px solid var(--accent); font-size: 0.76rem; color: var(--ink-dim); margin-bottom: 4px; }
+.fp-flaw strong { color: var(--accent-bright); }
+.fp-attrs { margin-top: 10px; display: grid; gap: 3px; }
+.fp-attr { display: grid; grid-template-columns: 74px 1fr 22px; gap: 7px; align-items: center; font-size: 0.7rem; color: var(--ink-dim); }
+.fp-bar { display: block; height: 4px; background: var(--well); border: 1px solid var(--rule); }
+.fp-bar i { display: block; height: 100%; background: var(--chrome-bright); }
+.fp-power { margin-top: 9px; font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.12em; color: var(--chrome-bright); }
+.forge-actions { padding-top: 10px; flex-shrink: 0; }
+.forge-actions .brew-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Essence — the Core. Its own hue: it is neither health nor mana, and
+   reading it as "more mana" is exactly the confusion CoreSystem exists
+   to avoid. */
+.essence-bar { height: 12px; }
+.essence-fill { background: var(--el-arcane, #7a4fd0); transition: width 0.25s; }
+#core-readout {
+  font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint);
+  display: flex; justify-content: space-between; gap: 8px; margin-top: 2px;
+}
+#core-quality { color: var(--chrome-bright); }
+
+/* ── 28. THE LOOM: EQUIP PAGE ───────────────────────────── */
+.forge-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); padding: 0 14px; flex-shrink: 0; }
+.forge-tab {
+  background: none; border: 1px solid transparent; border-bottom: none;
+  color: var(--ink-faint); font-family: var(--font-display);
+  font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 7px 14px; cursor: pointer;
+}
+.forge-tab:hover { color: var(--ink-dim); }
+.forge-tab.picked {
+  color: var(--chrome-bright); border-color: var(--rule);
+  background: var(--panel-raised); position: relative; top: 1px;
+}
+.forge-equip { padding: 12px 18px 18px; overflow-y: auto; max-height: calc(90vh - 96px); }
+.forge-equip.hidden, .forge-body.hidden { display: none; }
+
+.equip-weapons, .equip-held { display: grid; gap: 4px; }
+.equip-slot {
+  display: grid; grid-template-columns: 26px 1fr auto auto; gap: 8px; align-items: center;
+  padding: 7px 9px; border: 1px solid var(--rule); border-left: 3px solid var(--g, var(--rule));
+  background: var(--panel-raised);
+}
+.equip-slot.empty { border-left-color: var(--rule); opacity: 0.55; }
+/* The weapon in hand — melee uses this one. */
+.equip-slot.inhand { box-shadow: inset 0 0 0 1px var(--chrome-bright); }
+.es-n {
+  font-family: var(--font-display); font-size: 0.68rem; color: var(--chrome-bright);
+  text-align: center; border: 1px solid var(--rule); padding: 1px 0; cursor: pointer;
+}
+.es-name { font-family: var(--font-display); font-size: 0.76rem; letter-spacing: 0.05em; color: var(--ink-strong); }
+.es-sub { font-size: 0.66rem; color: var(--ink-faint); }
+.es-off { background: none; border: none; color: var(--ink-faint); font-size: 0.95rem; cursor: pointer; padding: 0 4px; }
+.es-off:hover { color: var(--accent-bright); }
+
+.equip-bag { display: grid; gap: 3px; }
+.equip-bagrow {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 6px 9px; border: 1px solid var(--rule); border-left: 3px solid var(--g, var(--rule));
+}
+.eb-name { font-family: var(--font-display); font-size: 0.74rem; color: var(--ink-strong); }
+.eb-sub { font-size: 0.66rem; color: var(--ink-faint); flex: 1; min-width: 120px; }
+.eb-btn {
+  background: none; border: 1px solid var(--rule-strong); color: var(--ink-dim);
+  font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 7px; cursor: pointer;
+}
+.eb-btn:hover { color: var(--chrome-bright); border-color: var(--chrome); }
+
+.equip-bar { display: grid; gap: 2px; }
+.equip-barrow {
+  display: grid; grid-template-columns: 26px 1fr 1fr auto; gap: 8px; align-items: baseline;
+  padding: 4px 8px; border-left: 2px solid var(--chrome);
+}
+.ebar-key {
+  font-family: var(--font-display); font-size: 0.7rem; color: var(--chrome-bright);
+  text-align: center; border: 1px solid var(--rule);
+}
+.ebar-name { font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.06em; color: var(--ink-strong); }
+.ebar-from, .ebar-cost { font-size: 0.64rem; color: var(--ink-faint); }
+
+/* Enchant block on the Equip page */
+.equip-enchant { display: grid; grid-template-columns: 1fr 320px; gap: 14px; align-items: start; }
+.ench-left { min-width: 0; }
+.ench-row { padding: 5px 8px; border: 1px solid var(--rule); cursor: pointer; margin-bottom: 3px; }
+.ench-row:hover { border-color: var(--chrome); }
+.ench-row.picked { border-color: var(--chrome-bright); box-shadow: inset 0 0 0 1px var(--chrome-bright); }
+.er-name { display: block; font-family: var(--font-display); font-size: 0.72rem; color: var(--ink-strong); }
+.er-where { display: block; font-size: 0.62rem; color: var(--ink-faint); }
+.ench-target { max-height: 132px; overflow-y: auto; margin-bottom: 8px; }
+.fs-temper { color: var(--accent-bright); }
+.fp-act {
+  font-size: 0.5rem; letter-spacing: 0.12em; color: var(--accent-bright);
+  border: 1px solid var(--accent); padding: 0 3px; vertical-align: middle;
+}
+
+/* The inscription — what the player actually wrote, and its reading. */
+.fp-insc {
+  border: 1px solid var(--rule); border-left: 3px solid var(--chrome-bright);
+  padding: 6px 9px; margin-bottom: 9px; background: var(--well);
+}
+.fp-insc.bad { border-left-color: var(--accent); }
+.fp-insc.unknown { border-left-color: var(--el-void, #7d189e); }
+.fp-insc-phrase {
+  font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.22em;
+  color: var(--chrome-bright);
+}
+.fp-insc-read { font-size: 0.76rem; color: var(--ink-dim); font-style: italic; }
+.fp-insc.bad .fp-insc-read { color: var(--accent-bright); font-style: normal; }
+.fp-insc-mood {
+  font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint); margin-top: 2px;
+}
+/* Lexicon rows, colour-coded by grammatical class. */
+.forge-rule[data-cls='subject'] { border-left-color: var(--chrome-bright); }
+.forge-rule[data-cls='verb']    { border-left-color: var(--accent); }
+.forge-rule[data-cls='qualifier'] { border-left-color: var(--rule-strong); }
+.forge-rules { max-height: 168px; overflow-y: auto; }
+
+/* ── 29. THE LOADOUT HOTBAR ─────────────────────────────── */
+/* Active Aspects of equipped Memories. Sits above the wand row so the
+   two never fight for the same glance. */
+/* ── THE SUMMON STRIP ─────────────────────────────────────
+   What is out, and on which letter. Sits directly above the 1..9 bar
+   because it is what FILLS that bar: the three combat slots, plus
+   whatever is carried or worn.
+
+   Deliberately quieter than .lb-slot below — smaller, lower contrast,
+   no cooldown machinery. A summon letter is pressed a few times a
+   fight; an Aspect key is pressed constantly, and the louder element
+   should be the one you actually aim at. */
+/* ⚠️ nowrap, and it is load-bearing. `flex-wrap: wrap` makes the
+   browser move a chip to a second line BEFORE it will shrink one, so
+   the chips' own `flex: 1 1 auto` never gets a chance to act and the
+   strip took two rows over the hotbar at every container width below
+   ~460px. Wrapping and shrinking are alternatives here, not
+   complements, and this strip must stay exactly one row tall. */
+/* ⚠️ NO `vw` UNITS HERE, deliberately. The obvious fix for a strip
+   that is too wide for its parent is to give it a viewport-relative
+   width — and this environment reports `window.innerWidth === 0`
+   (HANDOFF §6: the pane's canvas is 0×0 and stays that way even when
+   fronted), so every `vw` length resolves to 0 and CANNOT BE
+   VERIFIED HERE. It would have looked correct on the owner's machine
+   and measured as a 0-width strip in every check I can run, which is
+   the worst of both worlds. The strip is sized by its content and
+   bounded by holding it to three chips instead.
+   ⚠️ nowrap is load-bearing: `wrap` makes the browser move a chip to
+   a second line BEFORE it will shrink one, so the chips' own
+   `flex: 1 1 auto` never gets to act. */
+.summon-bar {
+  display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap;
+  margin-bottom: 4px;
+}
+.summon-bar.empty { display: none; }
+.sb-chip {
+  display: grid; grid-template-columns: 16px 1fr auto; gap: 5px; align-items: center;
+  /* ⚠️ THE CHIPS MUST SHRINK, and a fixed min-width is what stopped
+     them. The row they sit in has NO fixed width — the wand bar above
+     is sized by its own contents and was measured at both 484px and
+     362px in the same session — so any min-width large enough to look
+     good in the wide case wraps the strip to a second row in the
+     narrow one, over a hotbar that is itself a row.
+     `flex: 1 1 auto` + `min-width: 0` lets them give way instead, and
+     `.sb-name`'s ellipsis absorbs it. (This is the row-direction
+     mirror of the flex-shrink trap in HANDOFF §0 #13 — there the
+     danger was shrinking to nothing in a COLUMN; here refusing to
+     shrink in a ROW is the bug.) */
+  flex: 1 1 auto; min-width: 0; max-width: 110px;
+  padding: 2px 6px; opacity: 0.78;
+  background: var(--scrim); border: 1px solid var(--rule);
+  border-left: 3px solid var(--g, var(--el, var(--chrome)));
+}
+/* The slot actually in hand is the one melee reads — it earns the
+   only full-opacity chip in the strip. */
+.sb-chip.inhand { opacity: 1; border-color: var(--rule-strong); }
+.sb-chip.inhand .sb-name { color: var(--ink-strong); }
+.sb-key {
+  font-family: var(--font-display); font-size: 0.62rem; color: var(--chrome-bright);
+  text-align: center; border: 1px solid var(--rule);
+}
+/* No letter is a real state, not a rendering gap — it says so. */
+.sb-key.unbound { color: var(--ink-faint); border-style: dashed; }
+.sb-name {
+  font-family: var(--font-display); font-size: 0.52rem; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.sb-where { font-family: var(--font-display); font-size: 0.48rem; color: var(--ink-faint); }
+/* An empty combat slot, and the "+N more carried" fold. Both are real
+   states the player should be able to read at a glance, so they are
+   drawn, not omitted — just quietly. */
+.sb-chip.vacant { opacity: 0.4; border-left-color: var(--rule); }
+.sb-chip.vacant .sb-name { color: var(--ink-faint); }
+/* Separates the three combat slots from what is merely carried. */
+.sb-split { width: 1px; align-self: stretch; background: var(--rule); margin: 2px 3px; }
+
+/* ── SUMMON LETTER CHIPS, in the panels ───────────────────
+   The same control in three places (the Loom's slots, its bag rows,
+   and the satchel's loadout block) so it reads as one idea wherever
+   it is met. Clicking any of them opens the SAME capture flow. */
+.es-key, .sl-gearkey {
+  font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.06em;
+  min-width: 22px; padding: 1px 5px; cursor: pointer;
+  color: var(--chrome-bright); background: transparent;
+  border: 1px solid var(--rule-strong);
+}
+.es-key:hover, .sl-gearkey:hover { color: var(--accent-bright); border-color: var(--accent-bright); }
+.es-key.unbound, .sl-gearkey.unbound {
+  color: var(--ink-faint); border-style: dashed; border-color: var(--rule);
+}
+
+.loadout-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 5px; }
+.loadout-bar.empty { display: none; }
+.lb-slot {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 18px 1fr auto; gap: 5px; align-items: center;
+  min-width: 118px; padding: 4px 7px;
+  background: var(--scrim); border: 1px solid var(--rule-strong);
+  border-left: 3px solid var(--el, var(--chrome));
+}
+.lb-key {
+  font-family: var(--font-display); font-size: 0.66rem; color: var(--chrome-bright);
+  text-align: center; border: 1px solid var(--rule);
+}
+.lb-name {
+  font-family: var(--font-display); font-size: 0.56rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-strong);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lb-cost { font-family: var(--font-display); font-size: 0.54rem; color: var(--ink-faint); }
+/* Not enough Essence — dim, but never hidden. */
+.lb-slot.poor { opacity: 0.45; }
+.lb-slot.poor .lb-cost { color: var(--accent-bright); }
+/* Cooldown sweeps up from the bottom, like the wand's radial. */
+.lb-cd {
+  position: absolute; left: 0; bottom: 0; width: 100%;
+  background: rgba(0, 0, 0, 0.55); pointer-events: none;
+}
+.lb-cdnum {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-display); font-size: 0.7rem; color: var(--accent-bright);
+}
+
+/* Rune chips: name, meaning, class, contribution. The name is the
+   emblem you just wrote — no two are alike, so it leads. */
+.forge-sign { flex-direction: column; align-items: flex-start; gap: 1px; padding: 4px 8px; }
+.fs-prop { color: var(--chrome-bright); font-size: 0.6rem; letter-spacing: 0.16em; }
+.fs-means {
+  font-family: var(--font-body); font-size: 0.66rem; letter-spacing: 0;
+  text-transform: none; font-style: italic; color: var(--ink-dim);
+}
+.forge-sign .fs-temper { font-size: 0.48rem; color: var(--ink-faint); }
+
+/* ── 30. SATCHEL LOADOUT ────────────────────────────────── */
+.satchel-loadout-body { display: grid; gap: 5px; }
+.sl-mem {
+  border: 1px solid var(--rule); border-left: 3px solid var(--g, var(--chrome));
+  padding: 6px 9px; background: var(--panel-raised);
+}
+.sl-mem.empty { opacity: 0.45; border-left-color: var(--rule); }
+.sl-mem-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sl-where {
+  font-family: var(--font-display); font-size: 0.52rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.sl-name { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--ink-strong); }
+.sl-grade { font-size: 0.64rem; color: var(--ink-faint); }
+.sl-off { margin-left: auto; background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 0.95rem; }
+.sl-off:hover { color: var(--accent-bright); }
+.sl-insc {
+  font-size: 0.66rem; color: var(--ink-faint); margin: 3px 0 5px;
+  letter-spacing: 0.1em; font-family: var(--font-display);
+}
+.sl-insc em { font-family: var(--font-body); letter-spacing: 0; font-size: 0.72rem; }
+
+.sl-aspect {
+  display: grid; grid-template-columns: 26px 130px 1fr auto; gap: 7px;
+  align-items: baseline; padding: 3px 0; border-top: 1px solid var(--rule);
+}
+.sl-aspect.passive { opacity: 0.72; }
+.sla-key {
+  font-family: var(--font-display); font-size: 0.66rem; color: var(--chrome-bright);
+  text-align: center; border: 1px solid var(--rule);
+}
+.sl-aspect.passive .sla-key { border-color: transparent; color: var(--ink-faint); }
+.sla-name { font-family: var(--font-display); font-size: 0.68rem; letter-spacing: 0.05em; color: var(--ink-strong); }
+.sla-line { font-size: 0.7rem; color: var(--ink-dim); }
+.sla-tag {
+  font-family: var(--font-display); font-size: 0.48rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.sla-rebind {
+  background: none; border: 1px solid var(--rule-strong); color: var(--ink-dim);
+  font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 2px 6px; cursor: pointer;
+}
+.sla-rebind:hover { color: var(--chrome-bright); border-color: var(--chrome); }
+
+.sl-armour-row { display: flex; gap: 8px; margin-top: 4px; }
+.sl-armour {
+  flex: 1; border: 1px solid var(--rule); padding: 4px 7px;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.sl-armour span {
+  font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.sl-armour strong { font-size: 0.7rem; color: var(--ink-dim); font-weight: normal; }
+.sl-hint { font-size: 0.66rem; color: var(--ink-faint); font-style: italic; margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════
+   THE PIONEER MENU (Tab) — one door to every panel.
+
+   Replaces eleven global letter keys with one, freeing them for the
+   player to bind (see ui/MenuUI.js for the full reasoning). House
+   rules apply as everywhere: no border-radius, no backdrop-filter, no
+   gradient fills — depth comes from rules, insets and hard shadow.
+   ══════════════════════════════════════════════════════════ */
+.pioneer-menu { width: min(640px, 94vw); }
+
+/* ⚠️ The corner filigree is an absolutely-positioned overlay at
+   inset:3px covering the WHOLE panel, so its brackets run straight
+   through the row text at the left and right edges unless the content
+   both sits above it and clears it. `position: relative` + z-index
+   puts the rows on top; the wider horizontal padding keeps the text
+   out of the bracket arms rather than merely painting over them. */
+.pioneer-menu > .menu-header,
+.pioneer-menu-grid,
+.pioneer-menu-foot { position: relative; z-index: 1; }
+
+.pioneer-menu-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;                 /* the hairline between rows IS the rule */
+  padding: 10px 30px 4px;
+  overflow-y: auto;
+  /* ⚠️ flex-shrink: 0 — a bounded scrolling strip inside a flex COLUMN
+     collapses to height 0 the moment the column runs short, with its
+     scrollHeight intact and every row correctly in the DOM with
+     nowhere to be drawn. That is trap #13, and it took out the Loom's
+     sign chips exactly this way. */
+  flex-shrink: 0;
+  /* Sized so all eleven rows clear the fold on an ordinary window —
+     it still scrolls below that rather than pushing the footer off. */
+  max-height: 70vh;
+}
+
+.pioneer-menu-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 10px;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--ink);
+  font-family: inherit;
+  transition: background 0.09s linear, border-color 0.09s linear;
+}
+.pioneer-menu-row:hover,
+.pioneer-menu-row:focus-visible {
+  background: rgba(143, 22, 22, 0.10);
+  border-color: var(--rule);
+  outline: none;
+}
+
+.pioneer-menu-key {
+  flex: 0 0 auto;
+  min-width: 22px;
+  padding: 2px 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--chrome);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+.pioneer-menu-row:hover .pioneer-menu-key { color: var(--accent-bright); }
+
+.pioneer-menu-text { display: flex; flex-direction: column; gap: 2px; }
+.pioneer-menu-name {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-strong);
+}
+.pioneer-menu-sub { font-size: 0.72rem; color: var(--ink-dim); line-height: 1.35; }
+
+.pioneer-menu-foot {
+  padding: 8px 30px 16px;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--rule);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   THE GRAVE COMPASS — where you fell, and what you left there.
+   Mirrors #descent-compass exactly (house rules: square corners,
+   solid panel, a single coloured left rule carrying the meaning),
+   with the accent in blood rather than void so the two are
+   distinguishable at a glance when both are on screen.
+   ══════════════════════════════════════════════════════════ */
+#grave-compass {
+  margin-top: 7px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+}
+#grave-compass-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+#grave-compass-dist {
+  display: block;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.74rem;
+  color: var(--ink-dim);
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORY SCENES — the narrative taking the screen.
+
+   House rules hold: square corners, solid panels, no gradient
+   fills, ornament is stroked geometry. The letterbox bars are
+   the one place a pure black is correct — they are meant to read
+   as the frame narrowing, not as a panel.
+   ══════════════════════════════════════════════════════════ */
+.story-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.story-scene.showing { opacity: 1; }
+
+/* ⚠️ The bars GROW rather than fading in. A letterbox that fades
+   reads as an overlay; one that closes reads as a camera. */
+.scene-bar {
+  width: 100%;
+  height: 8vh;
+  background: #000;
+  transition: height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+  flex-shrink: 0;
+}
+.story-scene.showing .scene-bar { height: 16vh; }
+
+.scene-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8vw 4vh;
+  /* ⚠️ A scrim, not a fill. The world stays visible and keeps
+     moving behind the words — that motion is what makes a scene
+     feel like it is happening rather than being displayed. */
+  background: linear-gradient(to bottom, transparent 40%, rgba(5, 4, 3, 0.72) 100%);
+  text-align: center;
+}
+
+.scene-speaker {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--chrome-bright);
+  margin-bottom: 10px;
+}
+.scene-line {
+  font-family: var(--font-body);
+  font-size: 1.12rem;
+  line-height: 1.65;
+  color: var(--ink-strong);
+  max-width: 62ch;
+  min-height: 3.4em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+.scene-hint {
+  margin-top: 18px;
+  font-size: 0.66rem;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+/* ── Chapter cards ── */
+.scene-chapter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  text-align: center;
+  pointer-events: none;
+}
+.scene-chapter-num {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--chrome);
+}
+.scene-chapter-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-strong);
+  margin: 6px 0 2px;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.95);
+}
+.scene-chapter-epigraph {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: var(--ink-dim);
+  max-width: 46ch;
+  margin: 8px auto 0;
+}
+
+/* ── The HUD stands down while a scene plays ──────────────
+   ⚠️ opacity + pointer-events, NOT display:none. Hiding the HUD
+   outright re-lays-out the page, which makes the bars visibly
+   jump back on when the scene ends; fading keeps the frame
+   still. `#story-scene` is excluded explicitly since it is a
+   sibling of the HUD, not a child. */
+body.in-scene #hud,
+body.in-scene #perf-hud,
+body.in-scene #interaction-prompt {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#hud { transition: opacity 0.4s ease; }
+
+/* ══════════════════════════════════════════════════════════
+   THE ROSTER — choosing which character this session is
+
+   Owner: "I should have a menu where I can choose the character so
+   the saves don't overlap." Deliberately built from character
+   creation's own vocabulary (masthead, cc-title, cc-preamble,
+   brew-button) rather than a new visual language: it is the screen
+   immediately before it and the two must read as one chapter.
+   ══════════════════════════════════════════════════════════ */
+#roster-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 481;              /* above creation, which it precedes */
+  overflow-y: auto;
+  background: rgba(var(--backdrop-rgb), 0.86);
+  color: var(--backdrop-ink);
+  padding: 54px 0 64px;
+}
+.roster-container {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+}
+.roster-list { display: flex; flex-direction: column; gap: 8px; margin: 22px 0 18px; }
+
+.roster-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--scrim);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-strong);
+}
+/* The one you played last, so the common case is findable at a glance
+   without making it the only thing on screen. */
+.roster-row.recent { border-left-color: var(--accent-bright); }
+.rr-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rr-name {
+  font-family: var(--font-display); font-size: 0.95rem; letter-spacing: 0.06em;
+  color: var(--ink-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rr-sub { font-family: var(--font-display); font-size: 0.6rem; color: var(--ink-faint); }
+
+.rr-play {
+  font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.1em;
+  padding: 6px 14px; cursor: pointer;
+  color: var(--ink-strong); background: transparent; border: 1px solid var(--rule-strong);
+}
+.rr-play:hover { color: var(--accent-bright); border-color: var(--accent-bright); }
+
+/* Delete is deliberately the quietest control on the row — it is the
+   only irreversible one, and this screen exists so people stop losing
+   characters. It also confirms before acting. */
+.rr-del {
+  font-family: var(--font-display); font-size: 0.85rem; line-height: 1;
+  width: 26px; height: 26px; cursor: pointer; opacity: 0.35;
+  color: var(--ink-faint); background: transparent; border: 1px solid transparent;
+}
+.rr-del:hover { opacity: 1; color: var(--accent-bright); border-color: var(--rule); }
+
+.roster-empty {
+  font-family: var(--font-body); font-size: 0.85rem; color: var(--ink-faint);
+  padding: 18px 4px; text-align: center;
+}
+.roster-actions { display: flex; justify-content: center; margin-top: 6px; }
+.roster-note {
+  font-family: var(--font-display); font-size: 0.58rem; color: var(--ink-faint);
+  text-align: center; margin-top: 14px; letter-spacing: 0.06em;
+}

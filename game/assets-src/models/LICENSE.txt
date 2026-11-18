@@ -1,0 +1,24 @@
+Third-party model provenance for this folder
+══════════════════════════════════════════════════════════
+
+Knight.glb
+  Source: KayKit - Adventurers Character Pack (1.0), by Kay Lousberg
+  https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0
+  https://www.kaylousberg.com/
+  License: CC0 1.0 Universal (public domain dedication)
+  http://creativecommons.org/publicdomain/zero/1.0/
+  Free for personal, educational and commercial use. Attribution
+  not required (credited here anyway).
+
+Skeleton_Warrior.glb
+  Source: KayKit - Skeletons Character Pack (1.0), by Kay Lousberg
+  https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0
+  https://www.kaylousberg.com/
+  License: CC0 1.0 Universal (public domain dedication)
+  http://creativecommons.org/publicdomain/zero/1.0/
+  Free for personal, educational and commercial use. Attribution
+  not required (credited here anyway).
+
+Both files embedded verbatim (unmodified geometry/animation data) as
+base64 into src/data/generatedModels.js via tools/embed-models.mjs,
+so the shipped single-file build never fetches them externally.

@@ -1,0 +1,25 @@
+# Build output
+dist/
+dist-single/
+node_modules/
+
+# HD texture assets — 49MB of CC0 material sets from ambientCG.
+# Regenerable in one command, so there is no reason to carry them in
+# version control:
+#     node tools/fetch-hd-textures.mjs
+# The fetcher is idempotent and rewrites public/hd/textures/LICENSE.txt
+# with full provenance.
+public/hd/textures/
+
+# Uncompressed source models the owner supplied (up to 160MB each).
+# The optimized, meshopt-compressed versions in assets-src/ are what
+# actually ship. Kept on disk deliberately — see HANDOFF.md — but not
+# committed.
+/*.glb
+Fantasy Props MegaKit[Standard]/
+
+.DS_Store
+
+# Photoscanned nature models — 13MB, CC0 from Poly Haven.
+# Regenerate: node tools/fetch-polyhaven-models.mjs
+public/hd/nature/

@@ -1,0 +1,343 @@
+/* ══════════════════════════════════════════════════════════════════════
+   THE REALISM PASS — the HUD in RŌNIN's language
+   ──────────────────────────────────────────────────────────────────────
+   Loaded AFTER style.css. Every panel the HUD had is still here (owner:
+   "restyle, keep everything"); this layer only changes how they speak.
+
+   The reference is RŌNIN's interface (~/AG/Games/client/src/ui/theme.css):
+   "The world is the picture; this layer whispers over its edges."
+     · Palette: lacquer black, ivory, muted gold; a restrained red only
+       for danger and for life.
+     · Type: Cormorant Garamond for words, Inter for the small print,
+       uppercase with wide tracking for labels.
+     · Thin lines instead of thick coloured bars; no glossy wells; panels
+       that fade into the scene instead of boxes that sit on top of it.
+
+   Mozzarela's own house rules still hold (style.css header): no
+   border-radius on panels, no backdrop-filter, no gradient FILLS on
+   controls. A lacquer panel's fade to transparent is a backdrop, not a
+   control fill, which is why it is allowed below.
+
+   ⚠️ To revert the whole restyle: remove one <link> line in index.html.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --r-ink:         #0c0b09;
+  --r-lacquer:     rgba(12, 11, 9, 0.62);
+  --r-lacquer-0:   rgba(12, 11, 9, 0);
+  --r-ivory:       #e9e1cf;
+  --r-ivory-dim:   rgba(233, 225, 207, 0.62);
+  --r-ivory-faint: rgba(233, 225, 207, 0.30);
+  --r-gold:        #c7a76a;
+  --r-gold-dim:    rgba(199, 167, 106, 0.55);
+  --r-blood:       #9e3b2f;
+  --r-steel:       #7c8b98;
+  --r-stamina:     #d6cdb6;
+  --r-line:        rgba(233, 225, 207, 0.14);
+  --r-serif: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  --r-sans:  "Inter", "Helvetica Neue", Arial, sans-serif;
+
+  /* Re-point the game's own font tokens, so every screen follows. */
+  --font-display: var(--r-serif);
+  --font-body:    var(--r-serif);
+}
+
+/* ── Vitals (top-left): a whisper, not a box ─────────────────────────── */
+#hud-top-left {
+  background: linear-gradient(90deg, var(--r-lacquer) 0%, rgba(12,11,9,0.35) 70%, var(--r-lacquer-0) 100%) !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 14px 26px 14px 18px !important;
+  color: var(--r-ivory);
+  font-family: var(--r-serif);
+}
+#hud-top-left::before, #hud-top-left::after,
+#hud-top-left > .filigree { display: none !important; }
+
+/* Thin lines. The number sits small, beside, not printed through a slab. */
+.stat-bar {
+  height: 3px !important;
+  margin: 15px 0 9px !important;
+  background: rgba(233, 225, 207, 0.10) !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.stat-bar-fill { box-shadow: none !important; background-image: none !important; }
+.hp-fill      { background: var(--r-blood) !important; }
+.mp-fill      { background: var(--r-steel) !important; }
+.stamina-fill { background: var(--r-stamina) !important; }
+.essence-fill { background: var(--r-gold) !important; }
+.xp-fill      { background: var(--r-ivory-faint) !important; }
+.stat-bar-text {
+  top: -14px !important;
+  bottom: auto !important;
+  left: 0 !important; right: auto !important;
+  height: auto !important;
+  line-height: 1 !important;
+  font: 500 10px/1 var(--r-sans) !important;
+  letter-spacing: 0.14em !important;
+  color: var(--r-ivory-dim) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;
+  justify-content: flex-start !important;
+}
+
+#hud-top-left, #hud-top-left * { text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+#level-readout, #lineage-readout, #ascent-readout, #leaning-readout,
+#player-level, #attune-name, #lineage-name, #lineage-stage, #ascent-rank {
+  font-family: var(--r-sans) !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.3em !important;
+  text-transform: uppercase;
+  color: var(--r-ivory-dim) !important;
+}
+.leaning-bar { height: 2px !important; border: none !important; background: rgba(233,225,207,0.10) !important; }
+.leaning-midline { background: var(--r-ivory-faint) !important; }
+.leaning-labels { font-family: var(--r-serif) !important; font-style: italic; color: var(--r-ivory-dim) !important; }
+
+/* ── Objective, compasses, trackers ──────────────────────────────────── */
+#quest-tracker, #descent-tracker {
+  background: linear-gradient(270deg, var(--r-lacquer) 0%, var(--r-lacquer-0) 100%) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#quest-title, #descent-name {
+  font: 500 11px/1.4 var(--r-sans) !important;
+  letter-spacing: 0.32em !important;
+  text-transform: uppercase;
+  color: var(--r-gold) !important;
+}
+#quest-desc, #descent-objective, #descent-phase {
+  font: 400 16px/1.45 var(--r-serif) !important;
+  color: var(--r-ivory) !important;
+}
+
+/* ── Portrait and map (top-right) ────────────────────────────────────── */
+#character-preview, #minimap-container {
+  background: radial-gradient(ellipse at 50% 40%, rgba(12,11,9,0.35), rgba(12,11,9,0.72)) !important;
+  border: 1px solid var(--r-line) !important;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.4) !important;
+}
+#character-preview::after, #minimap-container::after { display: none !important; }
+.hud-btn, #cursor-toggle-btn {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid var(--r-line) !important;
+  box-shadow: none !important;
+  font: 500 10px/1 var(--r-sans) !important;
+  letter-spacing: 0.32em !important;
+  color: var(--r-ivory-dim) !important;
+}
+
+/* ── Abilities (bottom): dark lacquer sockets, a gold ring when ready ── */
+.hotbar-row {
+  background: linear-gradient(0deg, var(--r-lacquer) 0%, var(--r-lacquer-0) 100%) !important;
+  border: none !important;
+  border-top: 1px solid var(--r-line) !important;
+  box-shadow: none !important;
+}
+.hotbar-row > .filigree { display: none !important; }
+.hotbar-slot {
+  background: radial-gradient(circle at 50% 40%, rgba(30,28,24,0.75), rgba(8,7,6,0.88) 70%) !important;
+  border: 1px solid var(--r-ivory-faint) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6) !important;
+}
+.hotbar-slot:hover { border-color: var(--r-gold) !important; }
+.hotbar-ability.active { box-shadow: 0 0 0 1px var(--r-gold), inset 0 0 0 1px rgba(0,0,0,0.6) !important; }
+.hotbar-key, .hotbar-cost {
+  font: 500 9.5px/1 var(--r-sans) !important;
+  letter-spacing: 0.08em !important;
+  color: var(--r-ivory) !important;
+  background: rgba(0,0,0,0.45) !important;
+  border: 1px solid var(--r-ivory-faint) !important;
+}
+.hotbar-divider { background: var(--r-line) !important; }
+
+/* The loadout strip and its letters */
+.lb-slot { border-color: var(--r-line) !important; background: rgba(8,7,6,0.55) !important; }
+.lb-key  { font: 500 10px/1 var(--r-sans) !important; color: var(--r-ivory) !important; }
+.lb-name { font: 500 12px/1 var(--r-serif) !important; letter-spacing: 0.22em !important; text-transform: uppercase; color: var(--r-ivory-dim) !important; }
+.lb-cost { font: 400 10px/1 var(--r-sans) !important; color: var(--r-gold-dim) !important; }
+
+/* ── The key legend: small print at the very edge ────────────────────── */
+#key-hints {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font: 400 10.5px/1.4 var(--r-sans) !important;
+  letter-spacing: 0.08em !important;
+  color: var(--r-ivory-faint) !important;
+}
+#key-hints kbd, .prompt-key {
+  font: 500 10px/1 var(--r-sans) !important;
+  color: var(--r-ivory) !important;
+  background: rgba(0,0,0,0.25) !important;
+  border: 1px solid var(--r-ivory-faint) !important;
+  box-shadow: none !important;
+}
+
+/* ── Notifications: a line of ink across the top, not a stamped box ── */
+.notification {
+  background: linear-gradient(90deg, var(--r-lacquer-0), var(--r-lacquer) 18%, var(--r-lacquer) 82%, var(--r-lacquer-0)) !important;
+  border: none !important;
+  border-top: 1px solid var(--r-line) !important;
+  border-bottom: 1px solid var(--r-line) !important;
+  box-shadow: none !important;
+  font: 400 17px/1.45 var(--r-serif) !important;
+  color: var(--r-ivory) !important;
+  padding: 7px 42px !important;
+}
+#interaction-prompt, #prompt-text {
+  font: 500 12px/1 var(--r-serif) !important;
+  letter-spacing: 0.3em !important;
+  text-transform: uppercase;
+  color: var(--r-ivory) !important;
+}
+
+/* The crosshair: a single small dot, as in RŌNIN. */
+#crosshair { opacity: 0.55; }
+
+/* ── Notification feed: left side, compact, out of the line of sight ──
+   (main.js showNotification — max 4, repeats collapse to ×n, dims in a fight) */
+#notifications {
+  top: auto !important; bottom: 250px !important; left: 18px !important; right: auto !important;
+  width: min(360px, 24vw); align-items: flex-start !important; gap: 3px !important;
+  transition: opacity .3s;
+}
+#notifications.in-fight { opacity: .45; }
+.notification {
+  max-width: 100% !important;
+  background: linear-gradient(90deg, var(--r-lacquer) 0%, var(--r-lacquer) 70%, var(--r-lacquer-0)) !important;
+  border: none !important; border-left: 2px solid var(--r-line) !important;
+  font: 400 13px/1.3 var(--r-serif) !important;
+  padding: 3px 20px 3px 9px !important; text-align: left;
+}
+
+/* ── The one hotbar (combat overhaul): Path · Remnants · Wand ── */
+.hotbar-group[data-label] { position: relative; }
+.hotbar-group[data-label]::before {
+  content: attr(data-label); position: absolute; left: 50%; top: -15px; transform: translateX(-50%);
+  font: 500 9px/1 var(--r-serif); letter-spacing: .28em; text-transform: uppercase; color: var(--r-ivory); opacity: .55; white-space: nowrap;
+}
+#remnant-slots.empty, #remnant-slots.empty + .hotbar-divider { display: none; }
+.remnant-slot .hotbar-icon { opacity: .35; }
+.remnant-initial { position: absolute; inset: 0; display: grid; place-items: center; font: 600 17px/1 var(--r-serif); color: var(--r-ivory); text-shadow: 0 1px 3px #000; pointer-events: none; }
+.remnant-cdnum { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px/1 var(--r-serif); color: #fff; text-shadow: 0 0 4px #000; z-index: 3; pointer-events: none; }
+.hotbar-slot.hotbar-poor { opacity: .42; filter: saturate(.4); }
+.hotbar-slot.hotbar-poor .hotbar-cost { color: #ff8a6a !important; }
+.hotbar-key.unbound { opacity: .5; border-style: dashed !important; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   COMPACT HUD (default) — owner: "the UI elements are too big and
+   cluttering the screen". body.hud-compact is the default; F1 toggles
+   body.hud-full, which brings every panel back (main.js _setHudMode).
+   What stays in compact is only what a fight needs: health / Focus /
+   stamina, the target, the bar, the map. Everything else lives in its
+   panel (K the ascent, N the rite, Tab attunement, I satchel) or F1.
+   ══════════════════════════════════════════════════════════════════════ */
+body.hud-compact #character-preview,
+body.hud-compact #summon-bar,
+body.hud-compact #lineage-readout,
+body.hud-compact #ascent-readout,
+body.hud-compact #leaning-readout,
+body.hud-compact #cursor-toggle-btn { display: none !important; }
+body.hud-compact #hud-top-left {
+  background: none !important; padding: 10px 12px !important; width: 210px !important; min-width: 0 !important;
+}
+body.hud-compact .stat-bar { margin: 11px 0 6px !important; }
+body.hud-compact .stat-bar-text { font-size: 10px !important; }
+body.hud-compact #player-level { font-size: 10px !important; margin-top: 2px !important; opacity: .75; }
+body.hud-compact #descent-compass, body.hud-compact #grave-compass, body.hud-compact #descent-tracker { font-size: 11px !important; padding: 4px 8px !important; }
+body.hud-compact #minimap-container {
+  background: none !important; border: none !important; box-shadow: none !important; transform: scale(.72); transform-origin: top right;
+}
+body.hud-compact #minimap { border-radius: 50%; opacity: .85; }
+body.hud-compact #quest-tracker { transform: scale(.85); transform-origin: top right; }
+/* The composition readout docks under the target bar instead of floating mid-view. */
+body.hud-compact #target-read {
+  position: fixed !important; left: 50% !important; right: auto !important; top: calc(4.2vh + 34px) !important; bottom: auto !important;
+  transform: translateX(-50%) scale(.78) !important; transform-origin: 50% 0 !important; background: none !important; border: none !important; box-shadow: none !important;
+}
+body.hud-compact #target-read .target-read-name, body.hud-compact #target-read h3 { display: none !important; }
+#hud-mode-tag { position: absolute; left: 14px; bottom: 6px; font: 400 10px/1 var(--r-sans); letter-spacing: .12em; color: var(--r-ivory-faint); opacity: .7; pointer-events: none; }
+/* Compact HUD legibility on a bright sky: shadow, not a box. */
+body.hud-compact .stat-bar-text, body.hud-compact #player-level, body.hud-compact #player-level * {
+  text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.6) !important; color: var(--r-ivory) !important; opacity: .92;
+}
+body.hud-compact .stat-bar { margin: 13px 0 5px !important; }
+body.hud-compact #descent-compass, body.hud-compact #grave-compass, body.hud-compact #descent-tracker,
+body.hud-compact #hud-top-left [class*="tracker"], body.hud-compact #hud-top-left [id*="tracker"] {
+  background: linear-gradient(90deg, rgba(10,8,6,.55), rgba(10,8,6,0)) !important; border: none !important; border-left: 2px solid var(--r-line) !important;
+  font-size: 10px !important; padding: 3px 8px !important; box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE ARMAMENT (ui/WandUI.js) — bottom-left equipment cluster, after
+   Sekiro / Elden Ring / RŌNIN. Weapon silhouette + name, three arts and
+   one weave as plain named lines with a hairline cooldown. No glow, no
+   circles, no legend. Replaces the centred glyph-circle hotbar.
+   ══════════════════════════════════════════════════════════════════════ */
+#hud-bottom { left: 30px !important; right: auto !important; bottom: 28px !important; transform: none !important; }
+#wand-bar.armament { align-items: flex-start; gap: 0; transform: none !important; width: 250px; position: relative; }
+/* A soft ink pool behind the cluster so it reads over snow and sky alike. */
+#wand-bar.armament::before { content: ''; position: absolute; left: -30px; right: -60px; top: -16px; bottom: -28px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 70% 75% at 25% 70%, rgba(8,7,6,.55), rgba(8,7,6,0) 100%); }
+.armament .wand-channel { width: 210px; margin: 0 0 10px 4px; text-align: left; }
+.armament .channel-track { height: 2px; border: none; background: var(--r-line); }
+.armament .channel-fill { background: var(--r-ivory); }
+.armament .channel-tier { font: 500 9px/1 var(--r-sans); letter-spacing: .28em; }
+
+.arm-hand { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; margin-bottom: 7px;
+  border-bottom: 1px solid var(--r-line); width: 100%; }
+.arm-sil { width: 54px; height: 54px; flex: none; color: var(--r-ivory); opacity: .9;
+  background: radial-gradient(closest-side, rgba(12,11,9,.55), rgba(12,11,9,0));
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); }
+.arm-sil svg { width: 100%; height: 100%; display: block; }
+.arm-hand-text { min-width: 0; }
+.arm-name { font: italic 500 17px/1.1 var(--r-serif); color: var(--r-ivory); text-shadow: 0 1px 3px rgba(0,0,0,.9);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.arm-slots { display: flex; gap: 8px; margin-top: 5px; }
+.arm-slot { font: 500 10px/1 var(--r-sans); color: var(--r-ivory-faint); letter-spacing: .08em; }
+.arm-slot.on { color: var(--r-gold); }
+.arm-slot.empty { opacity: .5; }
+
+.arm-arts, .arm-spell { display: grid; gap: 4px; width: 100%; }
+.arm-spell:not(:empty) { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--r-line); }
+.arm-row { position: relative; display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline;
+  column-gap: 8px; padding: 1px 0 4px; pointer-events: auto; transition: opacity .2s; }
+.arm-key { font: 600 10px/1 var(--r-sans); color: var(--r-ivory-dim); text-align: center;
+  border: 1px solid var(--r-line); padding: 2px 0; }
+.arm-key.unbound { border-style: dashed; opacity: .5; }
+.arm-label { font: 400 14px/1.15 var(--r-serif); color: var(--r-ivory); text-shadow: 0 1px 3px rgba(0,0,0,.9);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arm-cd { position: absolute; left: 26px; right: 0; bottom: 0; height: 1px; background: rgba(233,225,207,.08); }
+.arm-cd i { position: absolute; inset: 0; background: var(--r-ivory-faint); transform-origin: left; }
+.arm-row.cooling { opacity: .45; }
+.arm-row.cooling .arm-cd i { background: var(--r-ivory); }
+.arm-row.poor .arm-label { color: #c98a78; }
+.arm-row.dim { opacity: .4; }
+.arm-pips { display: flex; gap: 3px; align-self: center; }
+.arm-pips b { width: 4px; height: 4px; transform: rotate(45deg); background: var(--r-ivory-faint); }
+.arm-pips b.on { background: var(--r-gold); }
+.hotbar-tooltip.arm-tip { transform: translateY(-50%) !important; }
+#interaction-prompt { bottom: 22vh !important; }
+
+/* Armament, STEEL additions: blade charge, stance, oil, locked techniques */
+.arm-charge { position: relative; height: 2px; width: 150px; margin-top: 5px; background: rgba(233,225,207,.1); overflow: hidden; }
+.arm-charge i { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: var(--el, #e9e1cf); opacity: .8; transition: transform .2s; }
+.arm-charge.full i { opacity: 1; box-shadow: 0 0 8px var(--el, #e9e1cf); animation: armFull 1.2s ease-in-out infinite alternate; }
+@keyframes armFull { to { opacity: .55; } }
+.arm-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.arm-stance { display: inline-flex; align-items: center; gap: 6px; }
+.arm-stance b { display: block; width: 12px; height: 2px; background: rgba(233,225,207,.18); margin: 1px 0; }
+.arm-stance { flex-direction: row; }
+.arm-stance b:nth-child(1), .arm-stance b:nth-child(2), .arm-stance b:nth-child(3) { display: none; }
+.arm-stance::before { content: ''; display: block; width: 12px; height: 10px;
+  background: linear-gradient(var(--s1, rgba(233,225,207,.2)) 0 2px, transparent 2px 4px, var(--s2, rgba(233,225,207,.2)) 4px 6px, transparent 6px 8px, var(--s3, rgba(233,225,207,.2)) 8px 10px); }
+.arm-stance:has(b[data-p="high"].on) { --s1: var(--r-gold); }
+.arm-stance:has(b[data-p="mid"].on) { --s2: var(--r-gold); }
+.arm-stance:has(b[data-p="low"].on) { --s3: var(--r-gold); }
+.arm-stance em { font: italic 400 12px/1 var(--r-serif); color: var(--r-ivory-dim); }
+.arm-oil { font: italic 400 12px/1 var(--r-serif); color: var(--r-gold); }
+.arm-row.locked { opacity: .42; }
+.arm-row.locked .arm-label small { font: 500 9px/1 var(--r-sans); letter-spacing: .08em; color: var(--r-ivory-faint); margin-left: 4px; }

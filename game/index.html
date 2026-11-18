@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" data-path="hell">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="description" content="Project Mozzarela - An infinite RPG with procedural generation, anime-style cel-shading, and deep crafting systems." />
+  <title>Project Mozzarela — The Fracture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Inscriptional caps for chrome, old-style book serif for reading. -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <!-- The realism pass: the HUD in RŌNIN's language. Remove this line to revert it. -->
+  <link rel="stylesheet" href="/style-realism.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ══════════════════════════════════════════════════
+       LOADING — the title card, not a progress dialog.
+       The live world is already rendering behind this
+       (see startMenuBackdrop() in main.js); everything
+       here is a framed plate sitting ON that world.
+       ══════════════════════════════════════════════════ -->
+  <div id="loading-screen">
+    <div class="loading-content title-plate">
+      <!-- cornerFiligree() injected here by main.js -->
+      <p class="title-eyebrow">Project Mozzarela</p>
+      <h1 class="loading-title">The Fracture</h1>
+      <!-- fractureRule() injected here by main.js -->
+      <p class="title-epigraph">The sky has been broken longer than anyone living can remember.</p>
+      <div class="loading-meter">
+        <div class="loading-bar-container">
+          <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <span class="loading-pct" id="loading-pct">0%</span>
+      </div>
+      <p class="loading-status" id="loading-status">Initializing world...</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       THE ROSTER — pick a character, or begin another
+       Owner: "I should have a menu where I can choose the
+       character so the saves don't overlap." There was one
+       save key for the whole game, so a second character
+       silently overwrote the first on the next autosave.
+       Sits BEFORE character creation: you choose who you
+       are continuing as before the game touches a save.
+       ══════════════════════════════════════════════════ -->
+  <div id="roster-screen" class="hidden">
+    <div class="cc-masthead">
+      <span class="cc-masthead-mark">The Fracture</span>
+      <span class="cc-masthead-step">Who walks today?</span>
+    </div>
+    <div class="roster-container">
+      <h1 class="cc-title">Your Pioneers</h1>
+      <p class="cc-preamble">
+        Each keeps its own run — its own level, its own Remnants, its own
+        keys. Nothing one of them does reaches another.
+      </p>
+      <div id="roster-list" class="roster-list"></div>
+      <div class="roster-actions">
+        <button id="roster-new" class="brew-button">Begin a new Pioneer</button>
+      </div>
+      <p class="roster-note" id="roster-note"></p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       CHARACTER CREATION — read as a bound chapter, not a
+       form. A fixed masthead, numbered sections, and a
+       sticky ledger at the foot that says exactly what is
+       still missing instead of leaving a dead grey button
+       to explain itself.
+       ══════════════════════════════════════════════════ -->
+  <div id="character-creation" class="hidden">
+    <div class="cc-masthead">
+      <span class="cc-masthead-mark">The Fracture</span>
+      <span class="cc-masthead-step" id="cc-masthead-step">Chapter One — The Pioneer</span>
+    </div>
+
+    <div class="cc-container">
+      <h1 class="cc-title">Create your Pioneer</h1>
+      <!-- fractureRule() injected here by main.js -->
+      <p class="cc-preamble">You are a Pioneer now — sent to harvest what the Fracture spills, and call it mercy. Nobody will tell you what you are. That gets decided by what you do out there.</p>
+
+      <div class="cc-section" data-step="name">
+        <div class="cc-section-head">
+          <span class="cc-numeral">I</span>
+          <label class="cc-label">The Name</label>
+          <span class="cc-section-state" data-state-for="name">—</span>
+        </div>
+        <input type="text" id="player-name" class="cc-input" placeholder="Who walks into the Fracture?" maxlength="20" />
+      </div>
+
+      <!-- ⚠️ THE DISCIPLINE PICKER IS GONE, DELIBERATELY.
+           Owner: "the powers chosen at the start should not be given,
+           as the innate powers should be given at the start of the
+           trial." Choosing three powers from a menu before the game
+           begins is exactly the "declare an identity at a menu"
+           pattern §2 already records this project as having removed
+           twice (the class, and the path). What you are is now decided
+           by the First Nightmare, and handed to you as you enter it.
+           The markup is REMOVED rather than hidden — a hidden section
+           that still gates `start-game-btn` is an unclickable button
+           with no visible reason. -->
+      <div class="cc-section cc-section-fate" data-step="fate">
+        <div class="cc-section-head">
+          <span class="cc-numeral">II</span>
+          <label class="cc-label">What You Are</label>
+          <span class="cc-section-state" data-state-for="fate">learned, not given</span>
+        </div>
+        <p class="cc-hint">
+          Not here, and not given. You carry plain steel. What you become is what
+          your hands learn with it.
+        </p>
+      </div>
+    </div>
+
+    <div class="cc-ledger">
+      <div class="cc-ledger-inner">
+        <ul class="cc-checklist" id="cc-checklist">
+          <li data-check="name">Name</li>
+          <li data-check="skills">Disciplines</li>
+        </ul>
+        <button id="start-game-btn" class="cc-start-btn" disabled>Enter the Fracture</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       STORY INTRO — the four STORY_INTRO_LINES, revealed
+       one at a time (CSS-staged, see .story-line) rather
+       than dumped as a paragraph block. The button arrives
+       last, so the lines are read rather than skipped past.
+       ══════════════════════════════════════════════════ -->
+  <div id="story-intro" class="hidden">
+    <div class="story-content">
+      <p class="story-line" id="story-text">The sky has been broken longer than anyone living can remember.</p>
+      <p class="story-line" id="story-text-2">You are a Pioneer now — sent to harvest what the Fracture spills, and call it mercy.</p>
+      <p class="story-line" id="story-text-3">Cast enough of one essence and it stops being a choice; it becomes what you are.</p>
+      <p class="story-line" id="story-text-4">Heaven swears the wound must close. Hell swears something wants it open.</p>
+      <!-- fractureRule() injected here by main.js -->
+      <button id="skip-story-btn" class="cc-start-btn story-begin">Begin the journey</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       HUD — Heads-Up Display (always on top of game)
+       ══════════════════════════════════════════════════ -->
+  <div id="hud" class="hidden">
+
+    <!-- TOP-LEFT: Player vitals -->
+    <div id="hud-top-left">
+      <div id="hp-bar" class="stat-bar hp-bar">
+        <div class="stat-bar-fill hp-fill" id="hp-fill"></div>
+        <span class="stat-bar-text" id="hp-text">100 / 100</span>
+      </div>
+      <div id="mp-bar" class="stat-bar mp-bar" title="Focus — spent by wand spells (Z/X/C) and Remnant skills (1–9)">
+        <div class="stat-bar-fill mp-fill" id="mp-fill"></div>
+        <span class="stat-bar-text" id="mp-text">50 / 50</span>
+      </div>
+      <div id="stamina-bar" class="stat-bar stamina-bar" title="Stamina — spent by attacks, heavies, blocks, dodges and sprinting">
+        <div class="stat-bar-fill stamina-fill" id="stamina-fill"></div>
+      </div>
+      <!-- Character level and its XP track. The thinnest bar in the
+           cluster on purpose: it is the FLOOR of progression, not the
+           headline. Rank (the Ascent, below) and attunement are the
+           facts worth reading; this one just needs to creep visibly so
+           that killing things in a field reads as going somewhere.
+           See systems/ProgressSystem.js. -->
+      <!-- Essence — the Core's fuel. Distinct from mana on purpose:
+           mana fuels Weaves, Essence fuels a Memory's Aspects. The
+           number beside it is the Core's QUALITY, which only Rank can
+           raise — see systems/CoreSystem.js. -->
+      <div id="essence-bar" class="stat-bar essence-bar" title="Essence" style="display:none">
+        <div class="stat-bar-fill essence-fill" id="essence-fill"></div>
+        <span class="stat-bar-text" id="essence-text">40 / 40</span>
+      </div>
+      <div id="xp-bar" class="stat-bar xp-bar" title="Experience">
+        <div class="stat-bar-fill xp-fill" id="xp-fill" style="width:0%"></div>
+      </div>
+      <div id="player-level">
+        <span id="level-readout">Lv 1</span>
+        <span id="attune-name">Unattuned</span>
+      </div>
+      <!-- The Ascent — permanent rank, as opposed to the attunement
+           line above it, which is what you are made of right now and
+           decays. Two lines because they are two different facts and
+           conflating them was the whole reason a long run stopped
+           reading as progress. See systems/AscentSystem.js. -->
+      <!-- Lineage — what you ARE, as opposed to what you have done
+           (the Ascent, below) or what you are made of (the attunement
+           line above). Third distinct fact, third line. Shows the
+           weapon's awakening rung once the Rite has been sat, because
+           the two are one subject. See systems/LineageSystem.js. -->
+      <div id="lineage-readout">
+        <span id="lineage-name">Unsounded</span>
+        <span id="lineage-stage"></span>
+      </div>
+      <div id="ascent-readout">
+        <span id="ascent-rank">Unproven</span>
+        <span id="ascent-ladder"></span>
+      </div>
+      <!-- The Leaning bar — Cinderbound ↔ Ascendant, as a live
+           percentage. Replaces the class you used to pick from a grid:
+           nothing here was declared, all of it was done. The filled
+           portion grows from whichever end you lean toward, so the bar
+           reads as two things competing for one length rather than as
+           a value climbing a track. -->
+      <div id="leaning-readout">
+        <div class="leaning-labels">
+          <span id="leaning-cinder-pct">50%</span>
+          <span id="leaning-calling">Untried</span>
+          <span id="leaning-asc-pct">50%</span>
+        </div>
+        <div class="leaning-bar">
+          <div class="leaning-fill-cinder" id="leaning-fill-cinder"></div>
+          <div class="leaning-fill-asc" id="leaning-fill-asc"></div>
+          <div class="leaning-midline"></div>
+        </div>
+      </div>
+
+      <!-- Nearest known Descent — distance and heading. The answer to
+           "the dungeons cannot be located": Gates were always reachable
+           but never FINDABLE, because the map only drew ones you had
+           already walked past. Populated by scouting (talk to the
+           Gate-Warden) as well as by discovery. -->
+      <div id="descent-compass" class="hidden">
+        <span id="descent-compass-name"></span>
+        <span id="descent-compass-dist"></span>
+      </div>
+
+      <!-- Where you last died, and what you left there. Without this
+           the grave is a coordinate in an infinite world and dying is
+           deletion rather than a journey — see dropGraveCache(). -->
+      <div id="grave-compass" class="hidden">
+        <span id="grave-compass-name"></span>
+        <span id="grave-compass-dist"></span>
+      </div>
+
+      <!-- Descent progress — only visible while one is open. -->
+      <div id="descent-tracker" class="hidden">
+        <div id="descent-name"></div>
+        <div id="descent-phase"></div>
+        <!-- What to DO, as opposed to where you are. The phase line
+             above is a state; this is the objective, and without it a
+             Descent gives the player no instruction at all. -->
+        <div id="descent-objective"></div>
+      </div>
+    </div>
+
+    <!-- TOP-RIGHT: Minimap only (quest tracker moved below it) -->
+    <div id="hud-top-right">
+      <div id="minimap-container">
+        <canvas id="minimap" width="160" height="160"></canvas>
+        <div id="compass">N</div>
+      </div>
+      <button id="cursor-toggle-btn" class="hud-btn">Cursor</button>
+
+      <!-- Quest Tracker — below minimap, never overlapping -->
+      <div id="quest-tracker" class="hidden">
+        <h3 id="quest-title">...</h3>
+        <p id="quest-desc">Loading quests...</p>
+        <div id="quest-progress"></div>
+        <!-- Distance/heading to the active quest's destination, when
+             it has one — see updateQuestCompass() in main.js. Empty
+             (and collapsed by having no text node) for quests with no
+             fixed location, e.g. "kill 3 skeletons anywhere." -->
+        <div id="quest-marker"></div>
+      </div>
+    </div>
+
+    <!-- CENTRE: Crosshair -->
+    <div id="crosshair">+</div>
+
+    <!-- Death — the one moment this game spends real red on. -->
+    <div id="death-overlay" class="hidden">
+      <div class="death-title">You Have Fallen</div>
+      <div class="death-sub">The Fracture does not blink. It only waits for you to stand again.</div>
+    </div>
+
+    <!-- CENTRE-BOTTOM: Interaction prompt (above wand bar) -->
+    <div id="interaction-prompt" class="hidden">
+      <span class="prompt-key">E</span> <span id="prompt-text">Interact</span>
+    </div>
+
+    <!-- BOTTOM-LEFT: the armament, injected by WandUI.js -->
+    <div id="hud-bottom"></div>
+
+    <!-- OVERLAY: Damage numbers & notifications (pointer-events: none) -->
+    <div id="overlays">
+      <div id="damage-numbers"></div>
+      <div id="notifications"></div>
+      <!-- Dread — a pulsing red-black vignette that tightens as HP
+           drops. Opacity/pulse speed driven from main.js each frame. -->
+      <div id="dread-vignette"></div>
+      <!-- Lore reveal — a found-journal fragment's title/text, shown
+           briefly and dismissed on its own (see main.js). -->
+      <div id="lore-reveal" class="hidden">
+        <div class="lore-reveal-title" id="lore-reveal-title"></div>
+        <div class="lore-reveal-text" id="lore-reveal-text"></div>
+      </div>
+      <!-- Unease whisper — rare, restrained, off-centre (see main.js). -->
+      <div id="unease-whisper"></div>
+    </div>
+
+  </div><!-- /#hud -->
+
+  <!-- ══════════════════════════════════════════════════
+       MENUS OVERLAY — shown over game when panels open
+       ══════════════════════════════════════════════════ -->
+  <div id="menus-overlay" class="hidden">
+
+    <!-- Inventory Panel -->
+    <div id="inventory-panel" class="menu-panel inventory-panel hidden">
+      <div class="menu-header">
+        <h2>The Satchel</h2>
+        <button id="close-inventory-btn" class="close-btn">×</button>
+      </div>
+
+      <!-- Loadout: what's worn, not carried.
+           ⚠️ This block used to be STATIC MARKUP with hardcoded "—" in
+           every slot and NOTHING anywhere filled it in. Equipped
+           Memories were therefore invisible in the satchel, which read
+           exactly as "I can't see the weapon in the inventory".
+           InventoryUI._renderLoadout() owns it now. -->
+      <div class="satchel-loadout">
+        <div class="satchel-loadout-label">Loadout</div>
+        <div id="satchel-loadout-body" class="satchel-loadout-body"></div>
+      </div>
+
+      <div class="satchel-search-row">
+        <input type="text" id="inventory-search" class="shelf-search" placeholder="Search the satchel…" />
+        <span class="satchel-count" id="satchel-count"></span>
+      </div>
+
+      <div id="inventory-grid" class="satchel-compartments">
+        <!-- Compartments injected by JS -->
+      </div>
+    </div>
+
+    <!-- Crafting Panel injected dynamically by CraftingUI.js -->
+
+    <!-- Codex Panel injected dynamically by CodexUI.js -->
+
+    <!-- Descent resolution — opened when a Descent's Warden falls.
+         Both options are always shown to both paths; taking the one
+         your ladder doesn't count still clears the place and still
+         pays fragments, it just banks no Trial. See descents.js. -->
+    <div id="descent-resolve-modal" class="menu-panel finale-panel hidden">
+      <div class="menu-header"><h2 id="descent-resolve-title">The Warden Has Fallen</h2></div>
+      <div class="finale-body">
+        <p class="finale-prompt" id="descent-resolve-prompt">It is over, and the Descent is still open behind you. That is a decision, not a state.</p>
+        <div class="finale-choices" id="descent-resolve-choices"></div>
+      </div>
+    </div>
+
+    <!-- Finale Choice — mq7's close. Opened by main.js on
+         Events.QUEST_FINALE_CHOICE instead of the quest auto-completing. -->
+    <div id="finale-choice-modal" class="menu-panel finale-panel hidden">
+      <div class="menu-header"><h2>The Core</h2></div>
+      <div class="finale-body">
+        <p class="finale-prompt">The Mithril Core sits heavy in your hand. Elder Aris is waiting for it. So, in her own way, is the valley.</p>
+        <div class="finale-choices">
+          <button class="finale-choice-btn" data-choice="aris">
+            <span class="finale-choice-title">Give it to Aris</span>
+            <span class="finale-choice-sub">Trust the Sanctuary's reading — the wound should close.</span>
+          </button>
+          <button class="finale-choice-btn" data-choice="self">
+            <span class="finale-choice-title">Keep it</span>
+            <span class="finale-choice-sub">Neither of them gets to decide this one.</span>
+          </button>
+          <button class="finale-choice-btn" data-choice="ostra">
+            <span class="finale-choice-title">Take it to Ostra</span>
+            <span class="finale-choice-sub">Maybe she's right that it isn't closing at all.</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#menus-overlay -->
+
+  <!-- Finale narration — the closing beat's three lines, held longer
+       than a normal lore reveal. Lives outside #menus-overlay so it
+       reads over the world, not over a dimmed backdrop. -->
+  <div id="finale-narration" class="hidden">
+    <div class="lore-reveal-title">What the Fracture Wants</div>
+    <div class="lore-reveal-text" id="finale-narration-text"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
